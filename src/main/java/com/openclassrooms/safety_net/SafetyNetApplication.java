@@ -20,7 +20,7 @@ public class SafetyNetApplication implements CommandLineRunner {
 
 	@Override
 	public void run (String... args) throws Exception {
-		dbSetup.setUpdb();
+		//dbSetup.setUpdb();
 	}
 
 

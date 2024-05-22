@@ -31,6 +31,15 @@ public class PersonService {
 		}
 	}
 
+	public Iterable<String> getPersonsEmailByCity (String city) throws ResponseStatusException {
+		Iterable<String> personsEmail = personRepository.findPersonsByCity(city);
+		if (personsEmail.iterator().hasNext()) {
+			return personsEmail;
+		} else {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No person found.");
+		}
+	}
+
 	public Iterable<Person> getPersons () throws ResponseStatusException {
 		Iterable<Person> persons = personRepository.findAll();
 		if (persons.iterator().hasNext()) {
