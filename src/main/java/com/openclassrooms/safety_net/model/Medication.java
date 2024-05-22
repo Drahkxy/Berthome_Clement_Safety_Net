@@ -1,5 +1,6 @@
 package com.openclassrooms.safety_net.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -21,10 +22,23 @@ public class Medication {
 	@ManyToMany(
 			mappedBy = "medications"
 	)
-	private List<Person> patients = new ArrayList<>();
+	@JsonIgnore
+	private List<MedicalRecord> medicalRecords = new ArrayList<>();
+
+
+	public Medication () {}
 
 	public Medication (String name, int dosage) {
 		this.name = name;
 		this.dosage = dosage;
+	}
+
+	@Override
+	public String toString () {
+		return "Medication{" +
+				"id=" + id +
+				", name='" + name + '\'' +
+				", dosage=" + dosage +
+				'}';
 	}
 }

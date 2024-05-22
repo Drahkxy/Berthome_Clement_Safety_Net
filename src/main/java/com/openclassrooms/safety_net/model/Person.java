@@ -1,23 +1,21 @@
 package com.openclassrooms.safety_net.model;
 
+import com.openclassrooms.safety_net.model.primary_key.PersonId;
 import jakarta.persistence.*;
 import lombok.Data;
-
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import org.hibernate.annotations.DynamicUpdate;
 
 @Entity
 @Data
 @Table(name = "person")
+@IdClass(PersonId.class)
+@DynamicUpdate
 public class Person {
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private int id;
-
 	@Column(name = "first_name")
 	private String firstName;
 
+	@Id
 	@Column(name = "last_name")
 	private String lastName;
 
@@ -25,48 +23,14 @@ public class Person {
 
 	private String email;
 
-	private LocalDate birthday;
-
-
 	@ManyToOne(
-			cascade = {
-					CascadeType.MERGE,
-					CascadeType.PERSIST
-			}
+			cascade = CascadeType.ALL
 	)
 	@JoinColumn(name = "address_id")
 	private Address address;
 
 
-	@ManyToMany(
-			fetch = FetchType.LAZY,
-			cascade = {
-					CascadeType.PERSIST,
-					CascadeType.MERGE
-			}
-	)
-	@JoinTable(
-			name = "person_medication",
-			joinColumns = @JoinColumn(name = "person_id"),
-			inverseJoinColumns = @JoinColumn(name = "medication_id")
-	)
-	private List<Medication> medications = new ArrayList<>();
-
-
-	@ManyToMany(
-			fetch = FetchType.LAZY,
-			cascade = {
-					CascadeType.PERSIST,
-					CascadeType.MERGE
-			}
-	)
-	@JoinTable(
-			name = "person_allergy",
-			joinColumns = @JoinColumn(name = "person_id"),
-			inverseJoinColumns = @JoinColumn(name = "allergy_id")
-	)
-	private List<Allergy> allergies = new ArrayList<>();
-
+	public Person () {}
 
 	public Person (String firstName, String lastName, String phone, String email) {
 		this.firstName = firstName;
@@ -75,24 +39,15 @@ public class Person {
 		this.email = email;
 	}
 
-	public void addMedication(Medication medication) {
-		medications.add(medication);
-		medication.getPatients().add(this);
-	}
 
-	public void removeMedication(Medication medication) {
-		medications.remove(medication);
-		medication.getPatients().remove(this);
+	@Override
+	public String toString () {
+		return "Person{" +
+				"firstName='" + firstName + '\'' +
+				", lastName='" + lastName + '\'' +
+				", phone='" + phone + '\'' +
+				", email='" + email + '\'' +
+				", address=" + address +
+				'}';
 	}
-
-	public void addAllergy(Allergy allergy) {
-		allergies.add(allergy);
-		allergy.getPersons().add(this);
-	}
-
-	public void removeAllergy(Allergy allergy) {
-		allergies.remove(allergy);
-		allergy.getPersons().remove(this);
-	}
-
 }
