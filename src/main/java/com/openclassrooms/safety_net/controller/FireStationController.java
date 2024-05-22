@@ -39,6 +39,19 @@ public class FireStationController {
 		}
 	}
 
+	@GetMapping("/firestations/{stationNumber}")
+	public Iterable<FireStation> getFireStationsByStationNumber (@PathVariable("stationNumber") final int stationNumber) {
+		try {
+			return fireStationService.getFireStationsByStationNumber(stationNumber);
+		} catch (ResponseStatusException e) {
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error occurred while retrieving fire stations with %s station number.".formatted(stationNumber));
+		}
+	}
+
 	@PatchMapping("/firestation/{id}")
 	public FireStation updateFireStation (@PathVariable("id") final int id, @RequestBody FireStationUpdate fireStationUpdate) {
 		try {

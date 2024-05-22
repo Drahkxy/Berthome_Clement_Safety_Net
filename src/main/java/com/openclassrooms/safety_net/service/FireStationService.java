@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Optional;
+
 @Service
 @Data
 public class FireStationService {
@@ -21,7 +23,7 @@ public class FireStationService {
 	private AddressService addressService;
 
 	public FireStation getFireStationById (int id) throws ResponseStatusException {
-		var fire = fireStationRepository.findById(id);
+		Optional<FireStation> fire = fireStationRepository.findById(id);
 		if (fire.isPresent())
 			return fire.get();
 		else
@@ -34,6 +36,15 @@ public class FireStationService {
 			return fireStations;
 		else
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No fire station found.");
+	}
+
+	public Iterable<FireStation> getFireStationsByStationNumber (int stationNumber) throws ResponseStatusException {
+		Iterable<FireStation> fireStations = fireStationRepository.findFireStationsByStationNumber(stationNumber);
+		if (fireStations.iterator().hasNext()) {
+			return fireStations;
+		} else {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No fire station found with %d station number.".formatted(stationNumber));
+		}
 	}
 
 	public FireStation addFireStation (FireStation fireStation) throws ResponseStatusException {
