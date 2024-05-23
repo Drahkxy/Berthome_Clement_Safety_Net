@@ -1,6 +1,7 @@
 package com.openclassrooms.safety_net.controller;
 
 import com.openclassrooms.safety_net.model.response.AddressInfo;
+import com.openclassrooms.safety_net.model.response.ChildInfo;
 import com.openclassrooms.safety_net.model.response.FireInfo;
 import com.openclassrooms.safety_net.model.response.PersonInfo;
 import com.openclassrooms.safety_net.service.PersonService;
@@ -85,6 +86,19 @@ public class UtilitiesController {
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while retrieving persons phone numbers for a phone alert.");
+		}
+	}
+
+	@GetMapping("/childAlert")
+	public List<ChildInfo> getChildAlertInfos (@RequestParam("label") final String label, @RequestParam("zip") final String zip, @RequestParam("city") final String city) {
+		try {
+			return utilitiesService.getChildAlertInfos(label, zip, city);
+		} catch (ResponseStatusException e) {
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while retrieving children information's for a child alert.");
 		}
 	}
 
