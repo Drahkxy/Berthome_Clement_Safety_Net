@@ -1,6 +1,7 @@
 package com.openclassrooms.safety_net.controller;
 
 import com.openclassrooms.safety_net.model.response.AddressInfo;
+import com.openclassrooms.safety_net.model.response.FireInfo;
 import com.openclassrooms.safety_net.model.response.PersonInfo;
 import com.openclassrooms.safety_net.service.PersonService;
 import com.openclassrooms.safety_net.service.UtilitiesService;
@@ -58,6 +59,32 @@ public class UtilitiesController {
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while retrieving addresses information's covered by fire stations with %d station number.".formatted(stationNumber));
+		}
+	}
+
+	@GetMapping("/fire")
+	public FireInfo getFireInfos (@RequestParam("label") final String label, @RequestParam("zip") final String zip, @RequestParam("city") final String city) {
+		try  {
+			return utilitiesService.getFireInfos(label, zip, city);
+		} catch (ResponseStatusException e) {
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while retrieving persons and fire stations infos after fire declaration.");
+		}
+	}
+
+	@GetMapping("/phoneAlert")
+	public List<String> getPhoneAlertInfos (@RequestParam("firestation") final int fireStationId) {
+		try {
+			return utilitiesService.getPhoneAlertInfos(fireStationId);
+		} catch (ResponseStatusException e) {
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while retrieving persons phone numbers for a phone alert.");
 		}
 	}
 

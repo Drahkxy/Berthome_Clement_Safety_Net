@@ -7,6 +7,7 @@ import lombok.Data;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,6 +75,12 @@ public class MedicalRecord {
 	public void removeAllergy (Allergy allergy) {
 		allergies.remove(allergy);
 		allergy.getMedicalRecords().remove(this);
+	}
+
+
+	public int getAge () {
+		Period period = Period.between(this.birthday, LocalDate.now());
+		return period.getYears();
 	}
 
 
