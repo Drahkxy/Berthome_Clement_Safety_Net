@@ -1,9 +1,6 @@
 package com.openclassrooms.safety_net.controller;
 
-import com.openclassrooms.safety_net.model.response.AddressInfo;
-import com.openclassrooms.safety_net.model.response.ChildInfo;
-import com.openclassrooms.safety_net.model.response.FireInfo;
-import com.openclassrooms.safety_net.model.response.PersonInfo;
+import com.openclassrooms.safety_net.model.response.*;
 import com.openclassrooms.safety_net.service.PersonService;
 import com.openclassrooms.safety_net.service.UtilitiesService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +35,7 @@ public class UtilitiesController {
 	}
 
 	@GetMapping("/personInfo")
-	public PersonInfo getPersonInfo (@RequestParam("firstName") final String firstName, @RequestParam("lastName") final String lastName) {
+	public PersonInfosNameEmailAgeAddressMedicals getPersonInfo (@RequestParam("firstName") final String firstName, @RequestParam("lastName") final String lastName) {
 		try {
 			return utilitiesService.getPersonInfo(firstName, lastName);
 		} catch (ResponseStatusException e) {
@@ -51,9 +48,9 @@ public class UtilitiesController {
 	}
 
 	@GetMapping("/flood/stations")
-	public List<AddressInfo> getPersonsCoveredByFireStationsInfos (@RequestParam("stations") final int stationNumber) {
+	public List<AddressInfos> getHomesResidentsInformationsCoveredByFireStations (@RequestParam("stations") final int stationNumber) {
 		try {
-			return utilitiesService.getPersonsCoveredByFireStationsInfos(stationNumber);
+			return utilitiesService.getHomesResidentsInformationsCoveredByFireStations(stationNumber);
 		} catch (ResponseStatusException e) {
 			e.printStackTrace();
 			throw e;
@@ -64,7 +61,7 @@ public class UtilitiesController {
 	}
 
 	@GetMapping("/fire")
-	public FireInfo getFireInfos (@RequestParam("label") final String label, @RequestParam("zip") final String zip, @RequestParam("city") final String city) {
+	public FireInfos getFireInfos (@RequestParam("label") final String label, @RequestParam("zip") final String zip, @RequestParam("city") final String city) {
 		try  {
 			return utilitiesService.getFireInfos(label, zip, city);
 		} catch (ResponseStatusException e) {
@@ -90,7 +87,7 @@ public class UtilitiesController {
 	}
 
 	@GetMapping("/childAlert")
-	public List<ChildInfo> getChildAlertInfos (@RequestParam("label") final String label, @RequestParam("zip") final String zip, @RequestParam("city") final String city) {
+	public List<ChildInfos> getChildAlertInfos (@RequestParam("label") final String label, @RequestParam("zip") final String zip, @RequestParam("city") final String city) {
 		try {
 			return utilitiesService.getChildAlertInfos(label, zip, city);
 		} catch (ResponseStatusException e) {
@@ -99,6 +96,19 @@ public class UtilitiesController {
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while retrieving children information's for a child alert.");
+		}
+	}
+
+	@GetMapping("/firestationsResidents")
+	public PersonsCoveredByFireStationsInfos getPersonsCoveredByFireStationsInfos (@RequestParam("stationNumber") final int stationNumber) {
+		try {
+			return utilitiesService.getPersonsCoveredByFireStationsInfos(stationNumber);
+		} catch (ResponseStatusException e) {
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while retrieving persons information's covered by fire station number %d.".formatted(stationNumber));
 		}
 	}
 

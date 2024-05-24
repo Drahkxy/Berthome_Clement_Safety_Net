@@ -10,7 +10,7 @@ import java.util.List;
 
 @Component
 @Data
-public class PersonInfo {
+public class PersonInfosNameEmailAgeAddressMedicals {
 	private String firstName;
 	private String lastName;
 	private String email;
@@ -19,7 +19,7 @@ public class PersonInfo {
 	private List<Allergy> allergies;
 	private List<Medication> medications;
 
-	public PersonInfo (String firstName, String lastName, String email, int age, Address address, List<Allergy> allergies, List<Medication> medications) {
+	public PersonInfosNameEmailAgeAddressMedicals (String firstName, String lastName, String email, int age, Address address, List<Allergy> allergies, List<Medication> medications) {
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.email = email;
@@ -29,6 +29,6 @@ public class PersonInfo {
 		this.medications = medications;
 	}
 
-	public PersonInfo () {
+	public PersonInfosNameEmailAgeAddressMedicals () {
 	}
 }

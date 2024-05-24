@@ -8,19 +8,19 @@ import java.util.List;
 
 @Component
 @Data
-public class ChildInfo {
+public class ChildInfos {
 	private String firstName;
 	private String lastName;
 	private int age;
 	private List<String> familyMembersCompleteName = new ArrayList<>();
 
-	public ChildInfo (String firstName, String lastName, int age) {
+	public ChildInfos (String firstName, String lastName, int age) {
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.age = age;
 	}
 
-	public ChildInfo () {
+	public ChildInfos () {
 	}
 
 	public void addFamilyMember (String familyMemberCompleteName) {

@@ -7,14 +7,14 @@ import java.util.List;
 
 @Component
 @Data
-public class FireInfo {
+public class FireInfos {
 	private List<Integer> fireStationsNumber;
-	private List<PersonInfo> residentsInfos;
+	private List<PersonInfosNameEmailAgeAddressMedicals> residentsInfos;
 
-	public FireInfo () {
+	public FireInfos () {
 	}
 
-	public FireInfo (List<Integer> fireStationsNumber, List<PersonInfo> residentsInfos) {
+	public FireInfos (List<Integer> fireStationsNumber, List<PersonInfosNameEmailAgeAddressMedicals> residentsInfos) {
 		this.fireStationsNumber = fireStationsNumber;
 		this.residentsInfos = residentsInfos;
 	}

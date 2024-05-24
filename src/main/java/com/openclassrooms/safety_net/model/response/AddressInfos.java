@@ -7,16 +7,16 @@ import java.util.List;
 
 @Component
 @Data
-public class AddressInfo {
+public class AddressInfos {
 	private String label;
 	private String zip;
 	private String city;
-	private List<PersonInfo> residentsInfos;
+	private List<PersonInfosNameEmailAgeAddressMedicals> residentsInfos;
 
-	public AddressInfo () {
+	public AddressInfos () {
 	}
 
-	public AddressInfo (String label, String zip, String city, List<PersonInfo> residentsInfos) {
+	public AddressInfos (String label, String zip, String city, List<PersonInfosNameEmailAgeAddressMedicals> residentsInfos) {
 		this.label = label;
 		this.zip = zip;
 		this.city = city;
