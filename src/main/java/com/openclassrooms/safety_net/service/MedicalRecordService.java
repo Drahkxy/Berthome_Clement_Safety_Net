@@ -54,7 +54,6 @@ public class MedicalRecordService {
 	public MedicalRecord addMedicalRecord (MedicalRecord medicalRecord) throws ResponseStatusException {
 		PersonId id = new PersonId(medicalRecord.getFirstName(), medicalRecord.getLastName());
 		if (!medicalRecordRepository.existsById(id)) {
-
 			List<Allergy> allergies = medicalRecord.getAllergies();
 			allergies = allergies.stream().map(allergy -> {
 				Allergy existingAllergy = allergyService.getAllergyByName(allergy.getName());
@@ -85,6 +84,7 @@ public class MedicalRecordService {
 		MedicalRecord medicalRecord = getMedicalRecordById(id);
 
 		List<Allergy> allergies = medicalRecordUpdate.getAllergies();
+		System.out.println(allergies.size());
 		allergies = allergies.stream().map(allergy -> {
 			Allergy existingAllergy = allergyService.getAllergyByName(allergy.getName());
 			if (existingAllergy != null) {
