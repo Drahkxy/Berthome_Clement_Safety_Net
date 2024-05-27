@@ -66,6 +66,7 @@ public class AllergyServiceTest {
 		List<Allergy> a = allergyService.getAllergiesOnlyWithNoLinks();
 
 		assertEquals(allergies, a);
+		assertEquals(allergies.get(0), a.get(0));
 
 		verify(allergyRepository, times(1)).findAllergiesOnlyWithNoLinks();
 	}

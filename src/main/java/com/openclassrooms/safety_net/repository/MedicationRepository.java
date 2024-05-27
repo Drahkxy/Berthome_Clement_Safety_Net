@@ -30,6 +30,6 @@ public interface MedicationRepository extends CrudRepository<Medication, Integer
 					"WHERE mrm.medication_id IS NULL",
 			nativeQuery = true
 	)
-	public Iterable<Medication> findAllergiesOnlyWithNoLinks ();
+	public Iterable<Medication> findMedicationsOnlyWithNoLinks ();
 
 }
