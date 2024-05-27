@@ -69,7 +69,7 @@ public class FireStationService {
 		Address actualAddress = fireStation.getAddress();
 		Address newAddress = fsUpdate.getAddress();
 
-		if (!actualAddress.getLabel().equalsIgnoreCase(newAddress.getLabel()) || !actualAddress.getZip().equalsIgnoreCase(newAddress.getZip()) || !actualAddress.getCity().equalsIgnoreCase(newAddress.getCity())) {
+		if (addressService.addressModified(actualAddress, newAddress)) {
 			int countResidentsAndFireStations = addressService.countResidentsAndFireStations(actualAddress.getLabel(), actualAddress.getZip(), actualAddress.getCity());
 			if (countResidentsAndFireStations <= 1) {
 				newAddress = addressService.updateAddress(actualAddress, newAddress);

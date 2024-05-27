@@ -34,7 +34,6 @@ public class MedicationServiceTest {
 		existingMedication = new Medication("aznol", 100);
 		existingMedication.setId(1);
 		nonExistentMedication = new Medication("pharmacol", 150);
-		nonExistentMedication.setId(2);
 		medications = List.of(existingMedication);
 	}
 

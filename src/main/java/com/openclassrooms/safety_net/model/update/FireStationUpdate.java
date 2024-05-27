@@ -10,4 +10,12 @@ public class FireStationUpdate {
 	private int station;
 
 	private Address address;
+
+	public FireStationUpdate (int station, Address address) {
+		this.station = station;
+		this.address = address;
+	}
+
+	public FireStationUpdate () {
+	}
 }
