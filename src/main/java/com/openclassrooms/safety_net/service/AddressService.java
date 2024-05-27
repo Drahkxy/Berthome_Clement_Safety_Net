@@ -25,6 +25,13 @@ public class AddressService {
 		return addressRepository.countTotalLinksWithAddress(label, zip, city);
 	}
 
+	public boolean addressModified (Address actualAddress, Address newAddress) {
+		System.out.println("dsgdsugdsgjsdigjsiogdsgj");
+		return !actualAddress.getLabel().equalsIgnoreCase(newAddress.getLabel()) ||
+				!actualAddress.getZip().equalsIgnoreCase(newAddress.getZip()) ||
+				!actualAddress.getCity().equalsIgnoreCase(newAddress.getCity());
+	}
+
 	public Address updateAddress (Address actualAddress, Address newAddress) {
 		String newAddressLabel = newAddress.getLabel();
 		String newAddressZip = newAddress.getZip();

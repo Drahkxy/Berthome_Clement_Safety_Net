@@ -13,5 +13,5 @@ public interface PersonRepository extends CrudRepository<Person, PersonId> {
 			value = "SELECT p.email FROM person p JOIN address a ON a.id = p.address_id WHERE a.city = :city",
 			nativeQuery = true
 	)
-	public Iterable<String> findPersonsByCity (@Param("city") String city);
+	public Iterable<String> findPersonsEmailByCity (@Param("city") String city);
 }

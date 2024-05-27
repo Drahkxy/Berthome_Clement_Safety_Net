@@ -12,4 +12,13 @@ public class PersonUpdate {
 	private String email;
 
 	private Address address;
+
+	public PersonUpdate (String phone, String email, Address address) {
+		this.phone = phone;
+		this.email = email;
+		this.address = address;
+	}
+
+	public PersonUpdate () {
+	}
 }

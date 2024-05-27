@@ -32,7 +32,7 @@ public class PersonService {
 	}
 
 	public Iterable<String> getPersonsEmailByCity (String city) throws ResponseStatusException {
-		Iterable<String> personsEmail = personRepository.findPersonsByCity(city);
+		Iterable<String> personsEmail = personRepository.findPersonsEmailByCity(city);
 		if (personsEmail.iterator().hasNext()) {
 			return personsEmail;
 		} else {
@@ -49,18 +49,28 @@ public class PersonService {
 		}
 	}
 
+
+	public Person updatePersonProperties (Person person, String email, String phone, Address address) {
+		if (!person.getEmail().equalsIgnoreCase(email))
+			person.setEmail(email);
+		if (!person.getPhone().equalsIgnoreCase(phone))
+			person.setPhone(phone);
+
+		if (addressService.addressModified(person.getAddress(), address)) {
+			person.setAddress(address);
+		}
+
+		return person;
+	}
+
 	public Person updatePerson (PersonId id, PersonUpdate personUpdate) throws ResponseStatusException {
 		Person person = getPersonById(id);
 
 		Address actualAddress = person.getAddress();
-		String actualAddressLabel = actualAddress.getLabel();
-		String actualAddressZip = actualAddress.getZip();
-		String actualAddressCity = actualAddress.getCity();
-
 		Address newAddress = personUpdate.getAddress();
 
-		if (!actualAddressLabel.equalsIgnoreCase(newAddress.getLabel()) || !actualAddressZip.equalsIgnoreCase(newAddress.getZip()) || !actualAddressCity.equalsIgnoreCase(newAddress.getCity())) {
-			int countResidentsAndFireStations = addressService.countResidentsAndFireStations(actualAddressLabel, actualAddressZip, actualAddressCity);
+		if (addressService.addressModified(actualAddress, newAddress)) {
+			int countResidentsAndFireStations = addressService.countResidentsAndFireStations(actualAddress.getLabel(), actualAddress.getZip(), actualAddress.getCity());
 			if (countResidentsAndFireStations <= 1) {
 				newAddress = addressService.updateAddress(actualAddress, personUpdate.getAddress());
 			} else {
@@ -71,11 +81,9 @@ public class PersonService {
 			}
 		}
 
-		person.setAddress(newAddress);
-		person.setEmail(personUpdate.getEmail());
-		person.setPhone(personUpdate.getPhone());
+		Person updatedPerson = updatePersonProperties(person, personUpdate.getEmail(), personUpdate.getPhone(), newAddress);
 
-		return personRepository.save(person);
+		return personRepository.save(updatedPerson);
 	}
 
 	public Person addPerson (Person person) throws ResponseStatusException {
@@ -90,7 +98,7 @@ public class PersonService {
 
 			return personRepository.save(person);
 		} catch (DataIntegrityViolationException e) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Person who called %s %s not found.".formatted(person.getFirstName(), person.getLastName()));
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Person who called %s %s already exist.".formatted(person.getFirstName(), person.getLastName()));
 		}
 	}
 
