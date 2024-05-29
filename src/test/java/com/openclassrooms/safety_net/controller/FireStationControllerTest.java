@@ -6,7 +6,6 @@ import com.openclassrooms.safety_net.model.Address;
 import com.openclassrooms.safety_net.model.FireStation;
 import com.openclassrooms.safety_net.model.update.FireStationUpdate;
 import com.openclassrooms.safety_net.service.FireStationService;
-import com.openclassrooms.safety_net.service.PersonService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +21,6 @@ import java.util.List;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @WebMvcTest(controllers = FireStationController.class)
 public class FireStationControllerTest {
@@ -32,8 +30,6 @@ public class FireStationControllerTest {
 	private ObjectMapper objectMapper;
 	@MockBean
 	private FireStationService fireStationService;
-	@MockBean
-	private PersonService personService;
 
 	private String fireStationJson;
 	private FireStation fireStation;

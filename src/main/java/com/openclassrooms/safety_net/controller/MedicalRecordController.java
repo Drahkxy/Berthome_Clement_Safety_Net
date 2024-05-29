@@ -15,14 +15,13 @@ public class MedicalRecordController {
 	@Autowired
 	private MedicalRecordService medicalRecordService;
 
-	@GetMapping("medical_record")
-	public ResponseEntity<MedicalRecord> getMedicalRecord (@RequestParam("first_name") final String firstName, @RequestParam("last_name") final String lastName) {
-		PersonId id = new PersonId(firstName, lastName);
+	@GetMapping("medical_records")
+	public ResponseEntity<Iterable<MedicalRecord>> getMedicalRecords () {
 		try {
-			MedicalRecord medicalRecord = medicalRecordService.getMedicalRecordById(id);
+			Iterable<MedicalRecord> medicalRecords = medicalRecordService.getMedicalRecords();
 			return ResponseEntity.ok()
 					.contentType(MediaType.APPLICATION_JSON)
-					.body(medicalRecord);
+					.body(medicalRecords);
 		} catch (ResponseStatusException e) {
 			e.printStackTrace();
 			return ResponseEntity.notFound()
@@ -34,13 +33,14 @@ public class MedicalRecordController {
 		}
 	}
 
-	@GetMapping("medical_records")
-	public ResponseEntity<Iterable<MedicalRecord>> getMedicalRecords () {
+	@GetMapping("medical_record")
+	public ResponseEntity<MedicalRecord> getMedicalRecord (@RequestParam("first_name") final String firstName, @RequestParam("last_name") final String lastName) {
+		PersonId id = new PersonId(firstName, lastName);
 		try {
-			Iterable<MedicalRecord> medicalRecords = medicalRecordService.getMedicalRecords();
+			MedicalRecord medicalRecord = medicalRecordService.getMedicalRecordById(id);
 			return ResponseEntity.ok()
 					.contentType(MediaType.APPLICATION_JSON)
-					.body(medicalRecords);
+					.body(medicalRecord);
 		} catch (ResponseStatusException e) {
 			e.printStackTrace();
 			return ResponseEntity.notFound()
@@ -70,8 +70,9 @@ public class MedicalRecordController {
 		}
 	}
 
-	@PutMapping("medical_record")
+	@PostMapping("medical_record")
 	public ResponseEntity<MedicalRecord> addMedicalRecord (@RequestBody MedicalRecord medicalRecord) {
+		System.out.println("heeeerrreeeee");
 		try {
 			MedicalRecord medicalRecordAdded = medicalRecordService.addMedicalRecord(medicalRecord);
 			return ResponseEntity.ok()
