@@ -4,7 +4,8 @@ import com.openclassrooms.safety_net.model.FireStation;
 import com.openclassrooms.safety_net.model.update.FireStationUpdate;
 import com.openclassrooms.safety_net.service.FireStationService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -13,75 +14,110 @@ public class FireStationController {
 	@Autowired
 	FireStationService fireStationService;
 
-	@GetMapping("/firestation/{id}")
-	public FireStation getFireStationById (@PathVariable("id") final int id) {
+	@GetMapping("/firestation")
+	public ResponseEntity<FireStation> getFireStationById (@RequestParam("id") final int id) {
 		try {
-			return fireStationService.getFireStationById(id);
+			FireStation fireStation = fireStationService.getFireStationById(id);
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(fireStation);
 		} catch (ResponseStatusException e) {
-			System.out.println(e.getMessage());
-			throw e;
+			e.printStackTrace();
+			return ResponseEntity.notFound()
+					.build();
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while retrieving fire station with %d id.".formatted(id));
+			e.printStackTrace();
+			return ResponseEntity.internalServerError()
+					.build();
 		}
 	}
 
 	@GetMapping("/firestations")
-	public Iterable<FireStation> getFireStations () {
+	public ResponseEntity<Iterable<FireStation>> getFireStations () {
 		try {
-			return fireStationService.getFireStations();
+			Iterable<FireStation> fireStations = fireStationService.getFireStations();
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(fireStations);
 		} catch (ResponseStatusException e) {
-			System.out.println(e.getMessage());
-			throw e;
+			e.printStackTrace();
+			return ResponseEntity.notFound()
+					.build();
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while retrieving fire stations.");
+			e.printStackTrace();
+			return ResponseEntity.internalServerError()
+					.build();
 		}
 	}
 
-	@GetMapping("/firestations/{stationNumber}")
-	public Iterable<FireStation> getFireStationsByStationNumber (@PathVariable("stationNumber") final int stationNumber) {
+	@GetMapping("/firestations_by_number")
+	public ResponseEntity<Iterable<FireStation>> getFireStationsByStationNumber (@RequestParam("stationNumber") final int stationNumber) {
 		try {
-			return fireStationService.getFireStationsByStationNumber(stationNumber);
+			Iterable<FireStation> fireStations = fireStationService.getFireStationsByStationNumber(stationNumber);
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(fireStations);
 		} catch (ResponseStatusException e) {
 			e.printStackTrace();
-			throw e;
+			return ResponseEntity.notFound()
+					.build();
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error occurred while retrieving fire stations with %s station number.".formatted(stationNumber));
+			return ResponseEntity.internalServerError()
+					.build();
 		}
 	}
 
-	@PatchMapping("/firestation/{id}")
-	public FireStation updateFireStation (@PathVariable("id") final int id, @RequestBody FireStationUpdate fireStationUpdate) {
+	@PatchMapping("/firestation")
+	public ResponseEntity<FireStation> updateFireStation (@RequestParam("id") final int id, @RequestBody FireStationUpdate fireStationUpdate) {
 		try {
-			return fireStationService.updateFireStation(id, fireStationUpdate);
+			FireStation fireStationUpdated = fireStationService.updateFireStation(id, fireStationUpdate);
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(fireStationUpdated);
 		} catch (ResponseStatusException e) {
-			System.out.println(e.getMessage());
-			throw e;
+			e.printStackTrace();
+			return ResponseEntity.notFound()
+					.build();
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while updating fire station.");
+			e.printStackTrace();
+			return ResponseEntity.internalServerError()
+					.build();
 		}
 	}
 
 	@DeleteMapping("/firestation/{id}")
-	public void deleteFireStation (@PathVariable("id") final int id) {
+	public ResponseEntity deleteFireStation (@PathVariable("id") final int id) {
 		try {
 			fireStationService.deleteFireStation(id);
+			return ResponseEntity.ok()
+					.build();
+		} catch (ResponseStatusException e) {
+			e.printStackTrace();
+			return ResponseEntity.notFound()
+					.build();
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while deleting fire station with %d id.".formatted(id));
+			e.printStackTrace();
+			return ResponseEntity.internalServerError()
+					.build();
 		}
 	}
 
 	@PostMapping("/firestation")
-	public FireStation addFireStation (@RequestBody FireStation fireStation) {
+	public ResponseEntity<FireStation> addFireStation (@RequestBody FireStation fireStation) {
 		try {
-			return fireStationService.addFireStation(fireStation);
+			FireStation fireStationAdded = fireStationService.addFireStation(fireStation);
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(fireStationAdded);
+		} catch (ResponseStatusException e) {
+			e.printStackTrace();
+			return ResponseEntity.notFound()
+					.build();
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while creating fire station.");
+			e.printStackTrace();
+			return ResponseEntity.badRequest()
+					.build();
 		}
 	}
 

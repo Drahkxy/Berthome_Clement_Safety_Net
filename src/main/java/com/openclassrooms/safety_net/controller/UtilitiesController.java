@@ -4,7 +4,8 @@ import com.openclassrooms.safety_net.model.response.*;
 import com.openclassrooms.safety_net.service.PersonService;
 import com.openclassrooms.safety_net.service.UtilitiesService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,93 +23,128 @@ public class UtilitiesController {
 	private PersonService personService;
 
 	@GetMapping("/communityEmail")
-	public Iterable<String> getPersonsCityMails (@RequestParam("city") final String city) {
+	public ResponseEntity<Iterable<String>> getPersonsCityMails (@RequestParam("city") final String city) {
 		try {
-			return personService.getPersonsEmailByCity(city);
+			Iterable<String> personsCityMails = personService.getPersonsEmailByCity(city);
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(personsCityMails);
 		} catch (ResponseStatusException e) {
 			e.printStackTrace();
-			throw e;
+			return ResponseEntity.notFound()
+					.build();
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while retrieving persons by city.");
+			return ResponseEntity.internalServerError()
+					.build();
 		}
 	}
 
 	@GetMapping("/personInfo")
-	public PersonInfosNameEmailAgeAddressMedicals getPersonInfo (@RequestParam("firstName") final String firstName, @RequestParam("lastName") final String lastName) {
+	public ResponseEntity<PersonInfosNameEmailAgeAddressMedicals> getPersonInfo (@RequestParam("firstName") final String firstName, @RequestParam("lastName") final String lastName) {
 		try {
-			return utilitiesService.getPersonInfo(firstName, lastName);
+			PersonInfosNameEmailAgeAddressMedicals personInfo = utilitiesService.getPersonInfo(firstName, lastName);
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(personInfo);
 		} catch (ResponseStatusException e) {
 			e.printStackTrace();
-			throw e;
+			return ResponseEntity.notFound()
+					.build();
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while retrieving %s %s information's.".formatted(firstName, lastName));
+			return ResponseEntity.internalServerError()
+					.build();
 		}
 	}
 
 	@GetMapping("/flood/stations")
-	public List<AddressInfos> getHomesResidentsInformationsCoveredByFireStations (@RequestParam("stations") final int stationNumber) {
+	public ResponseEntity<List<AddressInfos>> getHomesResidentsInformationsCoveredByFireStations (@RequestParam("stations") final int stationNumber) {
 		try {
-			return utilitiesService.getHomesResidentsInformationsCoveredByFireStations(stationNumber);
+			List<AddressInfos> addressInfos = utilitiesService.getHomesResidentsInformationsCoveredByFireStations(stationNumber);
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(addressInfos);
 		} catch (ResponseStatusException e) {
 			e.printStackTrace();
-			throw e;
+			return ResponseEntity.notFound()
+					.build();
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while retrieving addresses information's covered by fire stations with %d station number.".formatted(stationNumber));
+			return ResponseEntity.internalServerError()
+					.build();
 		}
 	}
 
 	@GetMapping("/fire")
-	public FireInfos getFireInfos (@RequestParam("label") final String label, @RequestParam("zip") final String zip, @RequestParam("city") final String city) {
+	public ResponseEntity<FireInfos> getFireInfos (@RequestParam("label") final String label, @RequestParam("zip") final String zip, @RequestParam("city") final String city) {
 		try  {
-			return utilitiesService.getFireInfos(label, zip, city);
+			FireInfos fireInfos = utilitiesService.getFireInfos(label, zip, city);
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(fireInfos);
 		} catch (ResponseStatusException e) {
 			e.printStackTrace();
-			throw e;
+			return ResponseEntity.notFound()
+					.build();
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while retrieving persons and fire stations infos after fire declaration.");
+			return ResponseEntity.internalServerError()
+					.build();
 		}
 	}
 
 	@GetMapping("/phoneAlert")
-	public List<String> getPhoneAlertInfos (@RequestParam("firestation") final int fireStationId) {
+	public ResponseEntity<List<String>> getPhoneAlertInfos (@RequestParam("firestation") final int fireStationId) {
 		try {
-			return utilitiesService.getPhoneAlertInfos(fireStationId);
+			List<String> phoneAlertInfos = utilitiesService.getPhoneAlertInfos(fireStationId);
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(phoneAlertInfos);
 		} catch (ResponseStatusException e) {
 			e.printStackTrace();
-			throw e;
+			return ResponseEntity.notFound()
+					.build();
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while retrieving persons phone numbers for a phone alert.");
+			return ResponseEntity.internalServerError()
+					.build();
 		}
 	}
 
 	@GetMapping("/childAlert")
-	public List<ChildInfos> getChildAlertInfos (@RequestParam("label") final String label, @RequestParam("zip") final String zip, @RequestParam("city") final String city) {
+	public ResponseEntity<List<ChildInfos>> getChildAlertInfos (@RequestParam("label") final String label, @RequestParam("zip") final String zip, @RequestParam("city") final String city) {
 		try {
-			return utilitiesService.getChildAlertInfos(label, zip, city);
+			List<ChildInfos> childAlertInfos = utilitiesService.getChildAlertInfos(label, zip, city);
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(childAlertInfos);
 		} catch (ResponseStatusException e) {
 			e.printStackTrace();
-			throw e;
+			return ResponseEntity.notFound()
+					.build();
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while retrieving children information's for a child alert.");
+			return ResponseEntity.internalServerError()
+					.build();
 		}
 	}
 
-	@GetMapping("/firestationsResidents")
-	public PersonsCoveredByFireStationsInfos getPersonsCoveredByFireStationsInfos (@RequestParam("stationNumber") final int stationNumber) {
+	@GetMapping("/firestations_residents")
+	public ResponseEntity<PersonsCoveredByFireStationsInfos> getPersonsCoveredByFireStationsInfos (@RequestParam("stationNumber") final int stationNumber) {
 		try {
-			return utilitiesService.getPersonsCoveredByFireStationsInfos(stationNumber);
+			PersonsCoveredByFireStationsInfos personsCoveredByFireStationsInfos = utilitiesService.getPersonsCoveredByFireStationsInfos(stationNumber);
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(personsCoveredByFireStationsInfos);
 		} catch (ResponseStatusException e) {
 			e.printStackTrace();
-			throw e;
+			return ResponseEntity.notFound()
+					.build();
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while retrieving persons information's covered by fire station number %d.".formatted(stationNumber));
+			return ResponseEntity.internalServerError()
+					.build();
 		}
 	}
 

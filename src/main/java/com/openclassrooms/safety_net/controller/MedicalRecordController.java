@@ -5,7 +5,8 @@ import com.openclassrooms.safety_net.model.primary_key.PersonId;
 import com.openclassrooms.safety_net.model.update.MedicalRecordUpdate;
 import com.openclassrooms.safety_net.service.MedicalRecordService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -14,71 +15,95 @@ public class MedicalRecordController {
 	@Autowired
 	private MedicalRecordService medicalRecordService;
 
-	@GetMapping("medical_record/{first_name}&{last_name}")
-	public MedicalRecord getMedicalRecord (@PathVariable("first_name") final String firstName, @PathVariable("last_name") final String lastName) {
+	@GetMapping("medical_record")
+	public ResponseEntity<MedicalRecord> getMedicalRecord (@RequestParam("first_name") final String firstName, @RequestParam("last_name") final String lastName) {
 		PersonId id = new PersonId(firstName, lastName);
 		try {
-			return medicalRecordService.getMedicalRecordById(id);
+			MedicalRecord medicalRecord = medicalRecordService.getMedicalRecordById(id);
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(medicalRecord);
 		} catch (ResponseStatusException e) {
 			e.printStackTrace();
-			throw e;
+			return ResponseEntity.notFound()
+					.build();
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error occurred while retrieving medical record of %s %s.".formatted(firstName, lastName));
+			return ResponseEntity.internalServerError()
+					.build();
 		}
 	}
 
 	@GetMapping("medical_records")
-	public Iterable<MedicalRecord> getMedicalRecords () {
+	public ResponseEntity<Iterable<MedicalRecord>> getMedicalRecords () {
 		try {
-			return medicalRecordService.getMedicalRecords();
+			Iterable<MedicalRecord> medicalRecords = medicalRecordService.getMedicalRecords();
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(medicalRecords);
 		} catch (ResponseStatusException e) {
 			e.printStackTrace();
-			throw e;
+			return ResponseEntity.notFound()
+					.build();
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error occurred while retrieving medical records.");
+			return ResponseEntity.internalServerError()
+					.build();
 		}
 	}
 
-	@DeleteMapping("medical_record/{first_name}&{last_name}")
-	public void deleteMedicalRecord (@PathVariable("first_name") final String firstName, @PathVariable("last_name") final String lastName) {
+	@DeleteMapping("medical_record")
+	public ResponseEntity deleteMedicalRecord (@RequestParam("first_name") final String firstName, @RequestParam	("last_name") final String lastName) {
 		PersonId id = new PersonId(firstName, lastName);
 		try {
 			medicalRecordService.deleteMedicalRecord(id);
+			return ResponseEntity.ok()
+					.build();
 		} catch (ResponseStatusException e) {
 			e.printStackTrace();
-			throw e;
+			return ResponseEntity.notFound()
+					.build();
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error occurred while deleting medical record of %s %s.".formatted(firstName, lastName));
+			return ResponseEntity.internalServerError()
+					.build();
 		}
 	}
 
 	@PutMapping("medical_record")
-	public MedicalRecord addMedicalRecord (@RequestBody MedicalRecord medicalRecord) {
+	public ResponseEntity<MedicalRecord> addMedicalRecord (@RequestBody MedicalRecord medicalRecord) {
 		try {
-			return medicalRecordService.addMedicalRecord(medicalRecord);
+			MedicalRecord medicalRecordAdded = medicalRecordService.addMedicalRecord(medicalRecord);
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(medicalRecordAdded);
 		} catch (ResponseStatusException e) {
 			e.printStackTrace();
-			throw e;
+			return ResponseEntity.badRequest()
+					.build();
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error occurred while adding medical record for %s %s.".formatted(medicalRecord.getFirstName(), medicalRecord.getLastName()));
+			return ResponseEntity.internalServerError()
+					.build();
 		}
 	}
 
-	@PatchMapping("medical_record/{first_name}&{last_name}")
-	public MedicalRecord updateMedicalRecord (@PathVariable("first_name") final String firstName, @PathVariable("last_name") final String lastName, @RequestBody MedicalRecordUpdate medicalRecordUpdate) {
+	@PatchMapping("medical_record")
+	public ResponseEntity<MedicalRecord> updateMedicalRecord (@RequestParam("first_name") final String firstName, @RequestParam("last_name") final String lastName, @RequestBody MedicalRecordUpdate medicalRecordUpdate) {
 		PersonId id = new PersonId(firstName, lastName);
 		try {
-			return medicalRecordService.updateMedicalRecord(id, medicalRecordUpdate);
+			MedicalRecord medicalRecordUpdated = medicalRecordService.updateMedicalRecord(id, medicalRecordUpdate);
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(medicalRecordUpdated);
 		} catch (ResponseStatusException e) {
 			e.printStackTrace();
-			throw e;
+			return ResponseEntity.notFound()
+					.build();
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error occurred while updating medical record of %s %s".formatted(firstName, lastName));
+			return ResponseEntity.internalServerError()
+					.build();
 		}
 	}
 

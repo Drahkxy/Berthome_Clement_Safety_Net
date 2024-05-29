@@ -5,7 +5,8 @@ import com.openclassrooms.safety_net.model.primary_key.PersonId;
 import com.openclassrooms.safety_net.model.update.PersonUpdate;
 import com.openclassrooms.safety_net.service.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -15,66 +16,97 @@ public class PersonController {
 	private PersonService personService;
 
 
-	@PostMapping("/person")
-	public Person addPerson (@RequestBody Person person) {
+	@GetMapping("/persons")
+	public ResponseEntity<Iterable<Person>> getPersons () {
 		try {
-			return personService.addPerson(person);
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while creating person.");
-		}
-	}
-
-	@PatchMapping("/person/{firstname}&{lastname}")
-	public Person updatePerson (@PathVariable("firstname") final String firstname, @PathVariable("lastname") final String lastname, @RequestBody PersonUpdate personUpdate) {
-		try {
-			return personService.updatePerson(new PersonId(firstname, lastname), personUpdate);
+			Iterable<Person> persons = personService.getPersons();
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(persons);
 		} catch (ResponseStatusException e) {
-			System.out.println(e.getMessage());
-			throw e;
+			e.printStackTrace();
+			return ResponseEntity.notFound()
+					.build();
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while updating person");
+			e.printStackTrace();
+			return ResponseEntity.internalServerError()
+					.build();
 		}
 	}
 
-	@DeleteMapping("/person/{firstname}&{lastname}")
-	public void deletePerson (@PathVariable("firstname") final String firstname, @PathVariable("lastname") final String lastname) {
+	@GetMapping("/person")
+	public ResponseEntity<Person> getPersonById (@RequestParam("firstname") final String firstname, @RequestParam("lastname") final String lastname) {
+		try {
+			Person person = personService.getPersonById((new PersonId(firstname, lastname)));
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(person);
+		} catch (ResponseStatusException e) {
+			e.printStackTrace();
+			return ResponseEntity.notFound()
+					.build();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.internalServerError()
+					.build();
+		}
+	}
+
+	@DeleteMapping("/person")
+	public ResponseEntity deletePerson (@RequestParam("firstname") final String firstname, @RequestParam("lastname") final String lastname) {
 		try {
 			personService.deletePersonById(new PersonId(firstname, lastname));
+			return ResponseEntity.ok()
+					.build();
 		} catch (ResponseStatusException e) {
-			System.out.println(e.getMessage());
-			throw e;
+			e.printStackTrace();
+			return ResponseEntity.notFound()
+					.build();
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while deleting person.");
+			e.printStackTrace();
+			return ResponseEntity.internalServerError()
+					.build();
 		}
 	}
 
-	@GetMapping("/person/{firstname}&{lastname}")
-	public Person getPersonById (@PathVariable("firstname") final String firstname, @PathVariable("lastname") final String lastname) {
+
+	@PostMapping("/person")
+	@ResponseBody
+	public ResponseEntity<Person> addPerson (@RequestBody Person person) {
 		try {
-			return personService.getPersonById(new PersonId(firstname, lastname));
+			Person createdPerson = personService.addPerson(person);
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(createdPerson);
 		} catch (ResponseStatusException e) {
-			System.out.println(e.getMessage());
-			throw e;
+			e.printStackTrace();
+			return ResponseEntity.badRequest()
+					.build();
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while retrieving person.");
+			e.printStackTrace();
+			return ResponseEntity.internalServerError()
+					.build();
 		}
 	}
 
-	@GetMapping("/persons")
-	public Iterable<Person> getPersons () {
+	@PatchMapping("/person")
+	public ResponseEntity<Person> updatePerson (@RequestParam("firstname") final String firstname, @RequestParam("lastname") final String lastname, @RequestBody PersonUpdate personUpdate) {
 		try {
-			return personService.getPersons();
+			Person personUpdated = personService.updatePerson(new PersonId(firstname, lastname), personUpdate);
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(personUpdated);
 		} catch (ResponseStatusException e) {
-			System.out.println(e.getMessage());
-			throw e;
+			e.printStackTrace();
+			return ResponseEntity.notFound()
+					.build();
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while retrieving persons.");
+			e.printStackTrace();
+			return ResponseEntity.internalServerError()
+					.build();
 		}
 	}
+
+
 
 }
