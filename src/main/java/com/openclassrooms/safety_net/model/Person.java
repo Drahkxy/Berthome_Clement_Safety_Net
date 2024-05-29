@@ -42,12 +42,8 @@ public class Person {
 
 	@Override
 	public String toString () {
-		return "Person{" +
-				"firstName='" + firstName + '\'' +
-				", lastName='" + lastName + '\'' +
-				", phone='" + phone + '\'' +
-				", email='" + email + '\'' +
-				", address=" + address +
-				'}';
+
+		return "{ \"firstName\": \"%s\", \"lastName\": \"%s\", \"phone\": \"%s\", \"email\": \"%s\", \"address\": %s }"
+				.formatted(firstName, lastName, phone, email, address);
 	}
 }

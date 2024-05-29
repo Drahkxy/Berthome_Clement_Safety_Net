@@ -197,6 +197,8 @@ public class FireStationServiceTest {
 			fireStationService.deleteFireStation(nonExistentFireStation.getId());
 		});
 
+		assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+
 		verify(fireStationRepository, times(1)).existsById(nonExistentFireStation.getId());
 		verify(fireStationRepository, never()).deleteById(anyInt());
 	}

@@ -8,12 +8,14 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 public class UtilitiesServiceTest {
@@ -59,7 +61,7 @@ public class UtilitiesServiceTest {
 	}
 
 	@Test
-	public void testGetPersonInfo() {
+	public void getPersonInfo_success_test () {
 		when(personService.getPersonById(personId)).thenReturn(person);
 		when(medicalRecordService.getMedicalRecordById(personId)).thenReturn(medicalRecord);
 
@@ -73,11 +75,14 @@ public class UtilitiesServiceTest {
 		assertEquals(person.getAddress(), result.getAddress());
 		assertEquals(medicalRecord.getAllergies(), result.getAllergies());
 		assertEquals(medicalRecord.getMedications(), result.getMedications());
+
+		verify(personService, times(1)).getPersonById(personId);
+		verify(medicalRecordService, times(1)).getMedicalRecordById(personId);
 	}
 
 	@Test
-	public void testGetHomesResidentsInformationsCoveredByFireStations() {
-		when(fireStationService.getFireStationsByStationNumber(1)).thenReturn(List.of(fireStation));
+	public void getHomesResidentsInformationsCoveredByFireStations_success_test () {
+		when(fireStationService.getFireStationsByStationNumber(fireStation.getStation())).thenReturn(List.of(fireStation));
 		when(medicalRecordService.getMedicalRecordById(personId)).thenReturn(medicalRecord);
 
 		List<AddressInfos> result = utilitiesService.getHomesResidentsInformationsCoveredByFireStations(1);
@@ -101,16 +106,19 @@ public class UtilitiesServiceTest {
 		assertEquals(person.getAddress(), personInfos.getAddress());
 		assertEquals(medicalRecord.getAllergies(), personInfos.getAllergies());
 		assertEquals(medicalRecord.getMedications(), personInfos.getMedications());
+
+		verify(fireStationService, times(1)).getFireStationsByStationNumber(fireStation.getStation());
+		verify(medicalRecordService, times(1)).getMedicalRecordById(personId);
 	}
 
 	@Test
-	public void testGetFireInfos() {
+	public void getFireInfos_addressFound_test () {
 		when(addressService.getAddressByLabelAndZipAndCity(address.getLabel(), address.getZip(), address.getCity()))
 				.thenReturn(address);
 
 		when(medicalRecordService.getMedicalRecordById(personId)).thenReturn(medicalRecord);
 
-		FireInfos result = utilitiesService.getFireInfos("123 Main St", "12345", "Springfield");
+		FireInfos result = utilitiesService.getFireInfos(address.getLabel(), address.getZip(), address.getCity());
 
 		assertNotNull(result);
 
@@ -129,10 +137,30 @@ public class UtilitiesServiceTest {
 		assertEquals(person.getAddress(), personInfos.getAddress());
 		assertEquals(medicalRecord.getAllergies(), personInfos.getAllergies());
 		assertEquals(medicalRecord.getMedications(), personInfos.getMedications());
+
+		verify(addressService, times(1))
+				.getAddressByLabelAndZipAndCity(address.getLabel(), address.getZip(), address.getCity());
+		verify(medicalRecordService, times(1)).getMedicalRecordById(personId);
 	}
 
 	@Test
-	public void testGetPhoneAlertInfos() {
+	public void getFireInfos_addressNotFound_test () {
+		when(addressService.getAddressByLabelAndZipAndCity(address.getLabel(), address.getZip(), address.getCity()))
+				.thenReturn(null);
+
+		ResponseStatusException exception  = assertThrows(ResponseStatusException.class, () -> {
+			utilitiesService.getFireInfos(address.getLabel(), address.getZip(), address.getCity());
+		});
+
+		assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+
+		verify(addressService, times(1))
+				.getAddressByLabelAndZipAndCity(address.getLabel(), address.getZip(), address.getCity());
+		verify(medicalRecordService, never()).getMedicalRecordById(any(PersonId.class));
+	}
+
+	@Test
+	public void getPhoneAlertInfos_success_test () {
 		when(fireStationService.getFireStationById(fireStation.getId())).thenReturn(fireStation);
 
 		List<String> result = utilitiesService.getPhoneAlertInfos(fireStation.getId());
@@ -140,10 +168,12 @@ public class UtilitiesServiceTest {
 		assertNotNull(result);
 		assertFalse(result.isEmpty());
 		assertEquals(person.getPhone(), result.get(0));
+
+		verify(fireStationService, times(1)).getFireStationById(fireStation.getId());
 	}
 
 	@Test
-	public void testGetChildAlertInfos() {
+	public void getChildAlertInfos_success_test () {
 		PersonId childId = new PersonId("Jane", "Doe");
 
 		Person child = new Person(childId.getFirstName(), childId.getLastName(), "9876543210", "doe.jane@exemple.fr");
@@ -183,6 +213,10 @@ public class UtilitiesServiceTest {
 		assertNotNull(childInfos.getFamilyMembersCompleteName());
 		assertFalse(childInfos.getFamilyMembersCompleteName().isEmpty());
 		assertEquals(person.getFirstName() + " " + person.getLastName(), childInfos.getFamilyMembersCompleteName().get(0));
+
+		verify(addressService, times(1))
+				.getAddressByLabelAndZipAndCity("123 Main St", "12345", "Springfield");
+		verify(medicalRecordService, times(2)).getMedicalRecordById(any(PersonId.class));
 	}
 
 	@Test
@@ -218,6 +252,10 @@ public class UtilitiesServiceTest {
 		assertNotNull(result.getPersons());
 		assertFalse(result.getPersons().isEmpty());
 		assertEquals(2, result.getPersons().size());
+
+		verify(fireStationService, times(1))
+				.getFireStationsByStationNumber(fireStation.getStation());
+		verify(medicalRecordService, times(2)).getMedicalRecordById(any(PersonId.class));
 	}
 
 }

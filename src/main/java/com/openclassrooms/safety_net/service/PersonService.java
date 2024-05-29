@@ -99,6 +99,8 @@ public class PersonService {
 			return personRepository.save(person);
 		} catch (DataIntegrityViolationException e) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Person who called %s %s already exist.".formatted(person.getFirstName(), person.getLastName()));
+		} catch (Exception e) {
+			throw e;
 		}
 	}
 

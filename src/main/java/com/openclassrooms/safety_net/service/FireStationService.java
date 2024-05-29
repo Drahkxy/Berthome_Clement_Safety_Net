@@ -4,7 +4,6 @@ import com.openclassrooms.safety_net.model.Address;
 import com.openclassrooms.safety_net.model.FireStation;
 import com.openclassrooms.safety_net.model.update.FireStationUpdate;
 import com.openclassrooms.safety_net.repository.FireStationRepository;
-import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -14,7 +13,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Optional;
 
 @Service
-@Data
 public class FireStationService {
 	@Autowired
 	private FireStationRepository fireStationRepository;

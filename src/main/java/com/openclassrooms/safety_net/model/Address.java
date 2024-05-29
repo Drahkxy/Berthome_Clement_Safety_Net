@@ -79,11 +79,6 @@ public class Address {
 
 	@Override
 	public String toString () {
-		return "Address{" +
-				"id=" + id +
-				", label='" + label + '\'' +
-				", zip='" + zip + '\'' +
-				", city='" + city + '\'' +
-				'}';
+		return "{ \"id\": %d, \"label\": %s, \"zip\": %s, \"city\": %s }".formatted(id, label, zip, city);
 	}
 }
