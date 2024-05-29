@@ -14,13 +14,13 @@ public class FireStationController {
 	@Autowired
 	FireStationService fireStationService;
 
-	@GetMapping("/firestation")
-	public ResponseEntity<FireStation> getFireStationById (@RequestParam("id") final int id) {
+	@GetMapping("/firestations")
+	public ResponseEntity<Iterable<FireStation>> getFireStations () {
 		try {
-			FireStation fireStation = fireStationService.getFireStationById(id);
+			Iterable<FireStation> fireStations = fireStationService.getFireStations();
 			return ResponseEntity.ok()
 					.contentType(MediaType.APPLICATION_JSON)
-					.body(fireStation);
+					.body(fireStations);
 		} catch (ResponseStatusException e) {
 			e.printStackTrace();
 			return ResponseEntity.notFound()
@@ -32,13 +32,13 @@ public class FireStationController {
 		}
 	}
 
-	@GetMapping("/firestations")
-	public ResponseEntity<Iterable<FireStation>> getFireStations () {
+	@GetMapping("/firestation")
+	public ResponseEntity<FireStation> getFireStationById (@RequestParam("id") final int id) {
 		try {
-			Iterable<FireStation> fireStations = fireStationService.getFireStations();
+			FireStation fireStation = fireStationService.getFireStationById(id);
 			return ResponseEntity.ok()
 					.contentType(MediaType.APPLICATION_JSON)
-					.body(fireStations);
+					.body(fireStation);
 		} catch (ResponseStatusException e) {
 			e.printStackTrace();
 			return ResponseEntity.notFound()
@@ -68,26 +68,8 @@ public class FireStationController {
 		}
 	}
 
-	@PatchMapping("/firestation")
-	public ResponseEntity<FireStation> updateFireStation (@RequestParam("id") final int id, @RequestBody FireStationUpdate fireStationUpdate) {
-		try {
-			FireStation fireStationUpdated = fireStationService.updateFireStation(id, fireStationUpdate);
-			return ResponseEntity.ok()
-					.contentType(MediaType.APPLICATION_JSON)
-					.body(fireStationUpdated);
-		} catch (ResponseStatusException e) {
-			e.printStackTrace();
-			return ResponseEntity.notFound()
-					.build();
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.internalServerError()
-					.build();
-		}
-	}
-
-	@DeleteMapping("/firestation/{id}")
-	public ResponseEntity deleteFireStation (@PathVariable("id") final int id) {
+	@DeleteMapping("/firestation")
+	public ResponseEntity deleteFireStation (@RequestParam("id") final int id) {
 		try {
 			fireStationService.deleteFireStation(id);
 			return ResponseEntity.ok()
@@ -112,13 +94,36 @@ public class FireStationController {
 					.body(fireStationAdded);
 		} catch (ResponseStatusException e) {
 			e.printStackTrace();
+			return ResponseEntity.badRequest()
+					.build();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.internalServerError()
+					.build();
+		}
+	}
+
+
+
+
+	@PatchMapping("/firestation")
+	public ResponseEntity<FireStation> updateFireStation (@RequestParam("id") final int id, @RequestBody FireStationUpdate fireStationUpdate) {
+		try {
+			FireStation fireStationUpdated = fireStationService.updateFireStation(id, fireStationUpdate);
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(fireStationUpdated);
+		} catch (ResponseStatusException e) {
+			e.printStackTrace();
 			return ResponseEntity.notFound()
 					.build();
 		} catch (Exception e) {
 			e.printStackTrace();
-			return ResponseEntity.badRequest()
+			return ResponseEntity.internalServerError()
 					.build();
 		}
 	}
+
+
 
 }

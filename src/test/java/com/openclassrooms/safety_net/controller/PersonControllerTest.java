@@ -27,23 +27,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class PersonControllerTest {
 	@Autowired
 	private MockMvc mockMvc;
-
 	@Autowired
 	private ObjectMapper objectMapper;
-
 	@MockBean
 	private PersonService personService;
 
 	private String personJson;
 	private Person person;
-	private String otherPersonJson;
 	private Person otherPerson;
 	private PersonId existingPersonId;
 	private PersonId nonExistentPersonId;
 
 	@BeforeEach
 	public void setUp () throws JsonProcessingException {
-
 		Address address = new Address("123 Main St", "12345", "Springfield");
 		address.setId(1);
 
@@ -55,7 +51,7 @@ public class PersonControllerTest {
 		personJson = objectMapper.writeValueAsString(p);
 		person = objectMapper.readValue(personJson, Person.class);
 
-		otherPersonJson = objectMapper.writeValueAsString(otherP);
+		String otherPersonJson = objectMapper.writeValueAsString(otherP);
 		otherPerson = objectMapper.readValue(otherPersonJson, Person.class);
 
 		existingPersonId = new PersonId(person.getFirstName(), person.getLastName());
