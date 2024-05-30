@@ -6,6 +6,7 @@ import com.openclassrooms.safety_net.model.primary_key.PersonId;
 import com.openclassrooms.safety_net.model.response.*;
 import com.openclassrooms.safety_net.service.PersonService;
 import com.openclassrooms.safety_net.service.UtilitiesService;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -21,6 +22,8 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+
+
 @WebMvcTest(controllers = UtilitiesController.class)
 public class UtilitiesControllerTest {
 	@Autowired
@@ -32,47 +35,65 @@ public class UtilitiesControllerTest {
 	@MockBean
 	private PersonService personService;
 
+	private static String existingAddressCity;
+	private static String nonExistentAddressCity;
+	private static Address existingAddress;
+	private static Address nonExistentAddress;
+	private static int existingStationNumber;
+	private static int nonExistentStationNumber;
+	private static RuntimeException runtimeException;
+	private static ResponseStatusException responseStatusExceptionNotFound;
+
+	@BeforeAll
+	public static void setUp () {
+		existingAddressCity = "Springfield";
+		nonExistentAddressCity = "Shelbyville";
+
+		existingAddress = new Address("123 Main St", "12345", existingAddressCity);
+		nonExistentAddress = new Address("459 Elm St", "67890", nonExistentAddressCity);
+
+		existingStationNumber = 1;
+		nonExistentStationNumber = 2;
+
+		runtimeException = new RuntimeException("Service exception.");
+		responseStatusExceptionNotFound = new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource not found.");
+	}
+
+
 	@Test
 	public void getPersonsCityMails_success_test () throws Exception {
-		String city = "Springfield";
 		List<String> emails = List.of("john.doe@exemple.com", "doe.jane@exemple.fr");
 
-		when(personService.getPersonsEmailByCity(city)).thenReturn(emails);
+		when(personService.getPersonsEmailByCity(existingAddressCity)).thenReturn(emails);
 
-		mockMvc.perform(get("/communityEmail?city=%s".formatted(city)))
+		mockMvc.perform(get("/communityEmail?city=%s".formatted(existingAddressCity)))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$[0]").value(emails.get(0)))
 				.andExpect(jsonPath("$[1]").value(emails.get(1)));
 
-		verify(personService, times(1)).getPersonsEmailByCity(city);
+		verify(personService, times(1)).getPersonsEmailByCity(existingAddressCity);
 	}
 
 	@Test
 	public void getPersonsCityMails_throwsException_test () throws Exception {
-		String city = "Shelbyville";
+		when(personService.getPersonsEmailByCity(nonExistentAddressCity)).thenThrow(runtimeException);
 
-		when(personService.getPersonsEmailByCity(city)).thenThrow(new RuntimeException("Service exception."));
-
-		mockMvc.perform(get("/communityEmail?city=%s".formatted(city)))
+		mockMvc.perform(get("/communityEmail?city=%s".formatted(nonExistentAddressCity)))
 				.andExpect(status().isInternalServerError());
 
-		verify(personService, times(1)).getPersonsEmailByCity(city);
+		verify(personService, times(1)).getPersonsEmailByCity(nonExistentAddressCity);
 	}
 
 	@Test
 	public void getPersonsCityMails_throwsResponseStatusException_test () throws Exception {
-		String city = "Shelbyville";
+		when(personService.getPersonsEmailByCity(nonExistentAddressCity)).thenThrow(responseStatusExceptionNotFound);
 
-		when(personService.getPersonsEmailByCity(city))
-				.thenThrow(
-						new ResponseStatusException(HttpStatus.NOT_FOUND, "No person living in %s found.".formatted(city))
-				);
 
-		mockMvc.perform(get("/communityEmail?city=%s".formatted(city)))
+		mockMvc.perform(get("/communityEmail?city=%s".formatted(nonExistentAddressCity)))
 				.andExpect(status().isNotFound());
 
-		verify(personService, times(1)).getPersonsEmailByCity(city);
+		verify(personService, times(1)).getPersonsEmailByCity(nonExistentAddressCity);
 	}
 
 	@Test
@@ -96,7 +117,7 @@ public class UtilitiesControllerTest {
 		PersonId personId = new PersonId("Jane", "Doe");
 
 		when(utilitiesService.getPersonInfo(personId.getFirstName(), personId.getLastName()))
-				.thenThrow(new RuntimeException("Service exception."));
+				.thenThrow(runtimeException);
 
 		mockMvc.perform(get("/personInfo?firstName=%s&lastName=%s".formatted(personId.getFirstName(), personId.getLastName())))
 				.andExpect(status().isInternalServerError());
@@ -110,7 +131,7 @@ public class UtilitiesControllerTest {
 		PersonId personId = new PersonId("Jane", "Doe");
 
 		when(utilitiesService.getPersonInfo(personId.getFirstName(), personId.getLastName()))
-				.thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "No person found."));
+				.thenThrow(responseStatusExceptionNotFound);
 
 		mockMvc.perform(get("/personInfo?firstName=%s&lastName=%s".formatted(personId.getFirstName(), personId.getLastName())))
 				.andExpect(status().isNotFound());
@@ -121,214 +142,189 @@ public class UtilitiesControllerTest {
 
 	@Test
 	public void getHomesResidentsInformationsCoveredByFireStations_success_test () throws Exception {
-		int stationNumber = 1;
 		List<AddressInfos> addressInfos = List.of(new AddressInfos(), new AddressInfos());
 
-		when(utilitiesService.getHomesResidentsInformationsCoveredByFireStations(stationNumber))
+		when(utilitiesService.getHomesResidentsInformationsCoveredByFireStations(existingStationNumber))
 				.thenReturn(addressInfos);
 
-		mockMvc.perform(get("/flood/stations?stations=%d".formatted(stationNumber)))
+		mockMvc.perform(get("/flood/stations?stations=%d".formatted(existingStationNumber)))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
 		verify(utilitiesService, times(1))
-				.getHomesResidentsInformationsCoveredByFireStations(stationNumber);
+				.getHomesResidentsInformationsCoveredByFireStations(existingStationNumber);
 	}
 
 	@Test
 	public void getHomesResidentsInformationsCoveredByFireStations_throwsException_test () throws Exception {
-		int stationNumber = 1;
+		when(utilitiesService.getHomesResidentsInformationsCoveredByFireStations(nonExistentStationNumber))
+				.thenThrow(runtimeException);
 
-		when(utilitiesService.getHomesResidentsInformationsCoveredByFireStations(stationNumber))
-				.thenThrow(new RuntimeException("Service exception."));
-
-		mockMvc.perform(get("/flood/stations?stations=%d".formatted(stationNumber)))
+		mockMvc.perform(get("/flood/stations?stations=%d".formatted(nonExistentStationNumber)))
 				.andExpect(status().isInternalServerError());
 
 		verify(utilitiesService, times(1))
-				.getHomesResidentsInformationsCoveredByFireStations(stationNumber);
+				.getHomesResidentsInformationsCoveredByFireStations(nonExistentStationNumber);
 	}
 
 	@Test
 	public void getHomesResidentsInformationsCoveredByFireStations_throwsResponseStatusException_test () throws Exception {
-		int stationNumber = 1;
+		when(utilitiesService.getHomesResidentsInformationsCoveredByFireStations(nonExistentStationNumber))
+				.thenThrow(responseStatusExceptionNotFound);
 
-		when(utilitiesService.getHomesResidentsInformationsCoveredByFireStations(stationNumber))
-				.thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "No fire station found."));
-
-		mockMvc.perform(get("/flood/stations?stations=%d".formatted(stationNumber)))
+		mockMvc.perform(get("/flood/stations?stations=%d".formatted(nonExistentStationNumber)))
 				.andExpect(status().isNotFound());
 
 		verify(utilitiesService, times(1))
-				.getHomesResidentsInformationsCoveredByFireStations(stationNumber);
+				.getHomesResidentsInformationsCoveredByFireStations(nonExistentStationNumber);
 	}
 
 	@Test
 	public void getFireInfos_success_test () throws Exception {
-		Address address = new Address("123 Main St", "12345", "Springfield");
 		FireInfos fireInfos = new FireInfos();
 
-		when(utilitiesService.getFireInfos(address.getLabel(), address.getZip(), address.getCity()))
+		when(utilitiesService.getFireInfos(existingAddress.getLabel(), existingAddress.getZip(), existingAddress.getCity()))
 				.thenReturn(fireInfos);
 
-		mockMvc.perform(get("/fire?label=%s&zip=%s&city=%s".formatted(address.getLabel(), address.getZip(), address.getCity())))
+		mockMvc.perform(get("/fire?label=%s&zip=%s&city=%s".formatted(existingAddress.getLabel(), existingAddress.getZip(), existingAddress.getCity())))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
 		verify(utilitiesService, times(1))
-				.getFireInfos(address.getLabel(), address.getZip(), address.getCity());
+				.getFireInfos(existingAddress.getLabel(), existingAddress.getZip(), existingAddress.getCity());
 	}
 
 	@Test
 	public void getFireInfos_throwsException_test () throws Exception {
-		Address address = new Address("459 Elm St", "67890", "Shelbyville");
+		when(utilitiesService.getFireInfos(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity()))
+				.thenThrow(runtimeException);
 
-		when(utilitiesService.getFireInfos(address.getLabel(), address.getZip(), address.getCity()))
-				.thenThrow(new RuntimeException("Service exception."));
-
-		mockMvc.perform(get("/fire?label=%s&zip=%s&city=%s".formatted(address.getLabel(), address.getZip(), address.getCity())))
+		mockMvc.perform(get("/fire?label=%s&zip=%s&city=%s".formatted(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity())))
 				.andExpect(status().isInternalServerError());
 
 		verify(utilitiesService, times(1))
-				.getFireInfos(address.getLabel(), address.getZip(), address.getCity());
+				.getFireInfos(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity());
 	}
 
 	@Test
 	public void getFireInfos_throwsResponseStatusException_test () throws Exception {
-		Address address = new Address("459 Elm St", "67890", "Shelbyville");
+		when(utilitiesService.getFireInfos(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity()))
+				.thenThrow(responseStatusExceptionNotFound);
 
-		when(utilitiesService.getFireInfos(address.getLabel(), address.getZip(), address.getCity()))
-				.thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Address not found."));
-
-		mockMvc.perform(get("/fire?label=%s&zip=%s&city=%s".formatted(address.getLabel(), address.getZip(), address.getCity())))
+		mockMvc.perform(get("/fire?label=%s&zip=%s&city=%s".formatted(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity())))
 				.andExpect(status().isNotFound());
 
 		verify(utilitiesService, times(1))
-				.getFireInfos(address.getLabel(), address.getZip(), address.getCity());
+				.getFireInfos(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity());
 	}
 
 	@Test
 	public void getPhoneAlertInfos_success_test () throws Exception {
-		int stationNumber = 1;
 		List<String> phones = List.of("0123456789", "9876543210");
 
-		when(utilitiesService.getPhoneAlertInfos(stationNumber)).thenReturn(phones);
+		when(utilitiesService.getPhoneAlertInfos(existingStationNumber)).thenReturn(phones);
 
-		mockMvc.perform(get("/phoneAlert?firestation=%s".formatted(stationNumber)))
+		mockMvc.perform(get("/phoneAlert?firestation=%s".formatted(existingStationNumber)))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-		verify(utilitiesService, times(1)).getPhoneAlertInfos(stationNumber);
+		verify(utilitiesService, times(1)).getPhoneAlertInfos(existingStationNumber);
 	}
 
 	@Test
 	public void getPhoneAlertInfos_throwsException_test () throws Exception {
-		int stationNumber = 1;
+		when(utilitiesService.getPhoneAlertInfos(nonExistentStationNumber))
+				.thenThrow(runtimeException);
 
-		when(utilitiesService.getPhoneAlertInfos(stationNumber))
-				.thenThrow(new RuntimeException("Service exception."));
-
-		mockMvc.perform(get("/phoneAlert?firestation=%s".formatted(stationNumber)))
+		mockMvc.perform(get("/phoneAlert?firestation=%s".formatted(nonExistentStationNumber)))
 				.andExpect(status().isInternalServerError());
 
-		verify(utilitiesService, times(1)).getPhoneAlertInfos(stationNumber);
+		verify(utilitiesService, times(1)).getPhoneAlertInfos(nonExistentStationNumber);
 	}
 
 	@Test
 	public void getPhoneAlertInfos_throwsResponseStatusException_test () throws Exception {
-		int stationNumber = 1;
+		when(utilitiesService.getPhoneAlertInfos(nonExistentStationNumber))
+				.thenThrow(responseStatusExceptionNotFound);
 
-		when(utilitiesService.getPhoneAlertInfos(stationNumber))
-				.thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "No fire station found."));
-
-		mockMvc.perform(get("/phoneAlert?firestation=%s".formatted(stationNumber)))
+		mockMvc.perform(get("/phoneAlert?firestation=%s".formatted(nonExistentStationNumber)))
 				.andExpect(status().isNotFound());
 
-		verify(utilitiesService, times(1)).getPhoneAlertInfos(stationNumber);
+		verify(utilitiesService, times(1)).getPhoneAlertInfos(nonExistentStationNumber);
 	}
 	@Test
 	public void getChildAlertInfos_success_test () throws Exception {
-		Address address = new Address("123 Main St", "12345", "Springfield");
 		List<ChildInfos> childInfos = List.of(new ChildInfos(), new ChildInfos());
 
-		when(utilitiesService.getChildAlertInfos(address.getLabel(), address.getZip(), address.getCity()))
+		when(utilitiesService.getChildAlertInfos(existingAddress.getLabel(), existingAddress.getZip(), existingAddress.getCity()))
 				.thenReturn(childInfos);
 
-		mockMvc.perform(get("/childAlert?label=%s&zip=%s&city=%s".formatted(address.getLabel(), address.getZip(), address.getCity())))
+		mockMvc.perform(get("/childAlert?label=%s&zip=%s&city=%s".formatted(existingAddress.getLabel(), existingAddress.getZip(), existingAddress.getCity())))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
 		verify(utilitiesService, times(1))
-				.getChildAlertInfos(address.getLabel(), address.getZip(), address.getCity());
+				.getChildAlertInfos(existingAddress.getLabel(), existingAddress.getZip(), existingAddress.getCity());
 	}
 
 	@Test
 	public void getChildAlertInfos_throwsException_test () throws Exception {
-		Address address = new Address("459 Elm St", "67890", "Shelbyville");
+		when(utilitiesService.getChildAlertInfos(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity()))
+				.thenThrow(runtimeException);
 
-		when(utilitiesService.getChildAlertInfos(address.getLabel(), address.getZip(), address.getCity()))
-				.thenThrow(new RuntimeException("Service exception."));
-
-		mockMvc.perform(get("/childAlert?label=%s&zip=%s&city=%s".formatted(address.getLabel(), address.getZip(), address.getCity())))
+		mockMvc.perform(get("/childAlert?label=%s&zip=%s&city=%s".formatted(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity())))
 				.andExpect(status().isInternalServerError());
 
 		verify(utilitiesService, times(1))
-				.getChildAlertInfos(address.getLabel(), address.getZip(), address.getCity());
+				.getChildAlertInfos(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity());
 	}
 
 	@Test
 	public void getChildAlertInfos_throwsResponseStatusException_test () throws Exception {
-		Address address = new Address("459 Elm St", "67890", "Shelbyville");
+		when(utilitiesService.getChildAlertInfos(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity()))
+				.thenThrow(responseStatusExceptionNotFound);
 
-		when(utilitiesService.getChildAlertInfos(address.getLabel(), address.getZip(), address.getCity()))
-				.thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Address not found."));
-
-		mockMvc.perform(get("/childAlert?label=%s&zip=%s&city=%s".formatted(address.getLabel(), address.getZip(), address.getCity())))
+		mockMvc.perform(get("/childAlert?label=%s&zip=%s&city=%s".formatted(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity())))
 				.andExpect(status().isNotFound());
 
 		verify(utilitiesService, times(1))
-				.getChildAlertInfos(address.getLabel(), address.getZip(), address.getCity());
+				.getChildAlertInfos(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity());
 	}
 
 	@Test
 	public void getPersonsCoveredByFireStationsInfos_success_test () throws Exception {
-		int stationNumber = 1;
 		PersonsCoveredByFireStationsInfos personsCoveredByFireStationsInfos = new PersonsCoveredByFireStationsInfos();
 
-		when(utilitiesService.getPersonsCoveredByFireStationsInfos(stationNumber))
+		when(utilitiesService.getPersonsCoveredByFireStationsInfos(existingStationNumber))
 				.thenReturn(personsCoveredByFireStationsInfos);
 
-		mockMvc.perform(get("/firestations_residents?stationNumber=%s".formatted(stationNumber)))
+		mockMvc.perform(get("/firestations_residents?stationNumber=%s".formatted(existingStationNumber)))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-		verify(utilitiesService, times(1)).getPersonsCoveredByFireStationsInfos(stationNumber);
+		verify(utilitiesService, times(1)).getPersonsCoveredByFireStationsInfos(existingStationNumber);
 	}
 
 	@Test
 	public void getPersonsCoveredByFireStationsInfos_throwsException_test () throws Exception {
-		int stationNumber = 1;
+		when(utilitiesService.getPersonsCoveredByFireStationsInfos(nonExistentStationNumber))
+				.thenThrow(runtimeException);
 
-		when(utilitiesService.getPersonsCoveredByFireStationsInfos(stationNumber))
-				.thenThrow(new RuntimeException("Service exception."));
-
-		mockMvc.perform(get("/firestations_residents?stationNumber=%s".formatted(stationNumber)))
+		mockMvc.perform(get("/firestations_residents?stationNumber=%s".formatted(nonExistentStationNumber)))
 				.andExpect(status().isInternalServerError());
 
-		verify(utilitiesService, times(1)).getPersonsCoveredByFireStationsInfos(stationNumber);
+		verify(utilitiesService, times(1)).getPersonsCoveredByFireStationsInfos(nonExistentStationNumber);
 	}
 
 	@Test
 	public void getPersonsCoveredByFireStationsInfos_throwsResponseStatusException_test () throws Exception {
-		int stationNumber = 1;
+		when(utilitiesService.getPersonsCoveredByFireStationsInfos(nonExistentStationNumber))
+				.thenThrow(responseStatusExceptionNotFound);
 
-		when(utilitiesService.getPersonsCoveredByFireStationsInfos(stationNumber))
-				.thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "No fire station found."));
-
-		mockMvc.perform(get("/firestations_residents?stationNumber=%s".formatted(stationNumber)))
+		mockMvc.perform(get("/firestations_residents?stationNumber=%s".formatted(nonExistentStationNumber)))
 				.andExpect(status().isNotFound());
 
-		verify(utilitiesService, times(1)).getPersonsCoveredByFireStationsInfos(stationNumber);
+		verify(utilitiesService, times(1)).getPersonsCoveredByFireStationsInfos(nonExistentStationNumber);
 	}
 
 }
