@@ -8,6 +8,7 @@ import com.openclassrooms.safety_net.model.Medication;
 import com.openclassrooms.safety_net.model.primary_key.PersonId;
 import com.openclassrooms.safety_net.model.update.MedicalRecordUpdate;
 import com.openclassrooms.safety_net.service.MedicalRecordService;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,17 +36,26 @@ public class MedicalRecordControllerTest {
 	@MockBean
 	private MedicalRecordService medicalRecordService;
 
-	private PersonId existingMedicalRecordId;
-	private PersonId nonExistentMedicalRecordId;
+	private static PersonId existingMedicalRecordId;
+	private static PersonId nonExistentMedicalRecordId;
+	private static RuntimeException runtimeException;
+	private static ResponseStatusException responseStatusExceptionNotFound;
+
 	private MedicalRecord medicalRecord;
 	private String medicalRecordJson;
 	private MedicalRecord otherMedicalRecord;
 
-	@BeforeEach
-	public void setUp () throws JsonProcessingException {
+	@BeforeAll
+	public static void setUpStatic () throws JsonProcessingException {
 		existingMedicalRecordId = new PersonId("John", "Doe");
 		nonExistentMedicalRecordId = new PersonId("Jane", "Doe");
 
+		runtimeException = new RuntimeException("Service exception.");
+		responseStatusExceptionNotFound = new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource not found.");
+	}
+
+	@BeforeEach
+	public void setUp () throws JsonProcessingException {
 		MedicalRecord mr = new MedicalRecord(
 				existingMedicalRecordId.getFirstName(),
 				existingMedicalRecordId.getLastName(),
@@ -97,7 +107,7 @@ public class MedicalRecordControllerTest {
 
 	@Test
 	public void getMedicalRecords_throwsException_test () throws Exception {
-		when(medicalRecordService.getMedicalRecords()).thenThrow(new RuntimeException("Service exception"));
+		when(medicalRecordService.getMedicalRecords()).thenThrow(runtimeException);
 
 		mockMvc.perform(get("/medical_records"))
 				.andExpect(status().isInternalServerError());
@@ -107,8 +117,7 @@ public class MedicalRecordControllerTest {
 
 	@Test
 	public void getMedicalRecords_throwsResponseStatusException_test () throws Exception {
-		when(medicalRecordService.getMedicalRecords())
-				.thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Medical record not found."));
+		when(medicalRecordService.getMedicalRecords()).thenThrow(responseStatusExceptionNotFound);
 
 		mockMvc.perform(get("/medical_records"))
 				.andExpect(status().isNotFound());
@@ -134,8 +143,7 @@ public class MedicalRecordControllerTest {
 
 	@Test
 	public void getMedicalRecord_throwsException_test () throws Exception {
-		when(medicalRecordService.getMedicalRecordById(nonExistentMedicalRecordId))
-				.thenThrow(new RuntimeException("Service exception"));
+		when(medicalRecordService.getMedicalRecordById(nonExistentMedicalRecordId)).thenThrow(runtimeException);
 
 		mockMvc.perform(get("/medical_record?first_name=%s&last_name=%s"
 						.formatted(nonExistentMedicalRecordId.getFirstName(), nonExistentMedicalRecordId.getLastName())))
@@ -147,7 +155,7 @@ public class MedicalRecordControllerTest {
 	@Test
 	public void getMedicalRecord_throwsResponseStatusException_test () throws Exception {
 		when(medicalRecordService.getMedicalRecordById(nonExistentMedicalRecordId))
-				.thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Medical record not found."));
+				.thenThrow(responseStatusExceptionNotFound);
 
 		mockMvc.perform(get("/medical_record?first_name=%s&last_name=%s"
 						.formatted(nonExistentMedicalRecordId.getFirstName(), nonExistentMedicalRecordId.getLastName())))
@@ -169,9 +177,7 @@ public class MedicalRecordControllerTest {
 
 	@Test
 	public void deleteMedicalRecord_throwsException_test () throws Exception {
-		doThrow(new RuntimeException("Service exception."))
-				.when(medicalRecordService)
-				.deleteMedicalRecord(nonExistentMedicalRecordId);
+		doThrow(runtimeException).when(medicalRecordService).deleteMedicalRecord(nonExistentMedicalRecordId);
 
 		mockMvc.perform(delete("/medical_record?first_name=%s&last_name=%s"
 						.formatted(nonExistentMedicalRecordId.getFirstName(), nonExistentMedicalRecordId.getLastName())))
@@ -182,7 +188,7 @@ public class MedicalRecordControllerTest {
 
 	@Test
 	public void deleteMedicalRecord_throwsResponseStatusException_test () throws Exception {
-		doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Medical record not found and can't be deleted."))
+		doThrow(responseStatusExceptionNotFound)
 				.when(medicalRecordService)
 				.deleteMedicalRecord(nonExistentMedicalRecordId);
 
@@ -214,8 +220,7 @@ public class MedicalRecordControllerTest {
 
 	@Test
 	public void addMedicalRecord_throwsException_test () throws Exception {
-		when(medicalRecordService.addMedicalRecord(medicalRecord))
-				.thenThrow(new RuntimeException("Service exception."));
+		when(medicalRecordService.addMedicalRecord(medicalRecord)).thenThrow(runtimeException);
 
 		mockMvc.perform(
 						post("/medical_record")
@@ -229,8 +234,7 @@ public class MedicalRecordControllerTest {
 
 	@Test
 	public void addMedicalRecord_throwsResponseStatusException_test () throws Exception {
-		when(medicalRecordService.addMedicalRecord(medicalRecord))
-				.thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Medical record not found and can't be deleted."));
+		when(medicalRecordService.addMedicalRecord(medicalRecord)).thenThrow(responseStatusExceptionNotFound);
 
 		mockMvc.perform(
 						post("/medical_record")
@@ -277,7 +281,7 @@ public class MedicalRecordControllerTest {
 		medicalRecordUpdate = objectMapper.readValue(medicalRecordUpdateJson, MedicalRecordUpdate.class);
 
 		when(medicalRecordService.updateMedicalRecord(nonExistentMedicalRecordId, medicalRecordUpdate))
-				.thenThrow(new RuntimeException("Service exception."));
+				.thenThrow(runtimeException);
 
 		mockMvc.perform(
 						patch("/medical_record?first_name=%s&last_name=%s".formatted(
@@ -300,7 +304,7 @@ public class MedicalRecordControllerTest {
 		medicalRecordUpdate = objectMapper.readValue(medicalRecordUpdateJson, MedicalRecordUpdate.class);
 
 		when(medicalRecordService.updateMedicalRecord(nonExistentMedicalRecordId, medicalRecordUpdate))
-				.thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Medical record not found and can't be deleted."));
+				.thenThrow(responseStatusExceptionNotFound);
 
 		mockMvc.perform(
 						patch("/medical_record?first_name=%s&last_name=%s".formatted(

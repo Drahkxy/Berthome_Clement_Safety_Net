@@ -6,7 +6,7 @@ import com.openclassrooms.safety_net.model.Address;
 import com.openclassrooms.safety_net.model.FireStation;
 import com.openclassrooms.safety_net.model.update.FireStationUpdate;
 import com.openclassrooms.safety_net.service.FireStationService;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -26,18 +26,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class FireStationControllerTest {
 	@Autowired
 	private MockMvc mockMvc;
-	@Autowired
-	private ObjectMapper objectMapper;
 	@MockBean
 	private FireStationService fireStationService;
 
-	private String fireStationJson;
-	private FireStation fireStation;
-	private FireStation otherFireStation;
+	private static ObjectMapper objectMapper;
+	private static String fireStationJson;
+	private static FireStation fireStation;
+	private static FireStation otherFireStation;
+	private static RuntimeException runtimeException;
+	private static ResponseStatusException responseStatusExceptionNotFound;
 
+	@BeforeAll
+	public static void setUp () throws JsonProcessingException {
+		objectMapper = new ObjectMapper();
 
-	@BeforeEach
-	public void setUp () throws JsonProcessingException {
 		Address address = new Address("123 Main St", "12345", "Springfield");
 		address.setId(1);
 
@@ -55,6 +57,9 @@ public class FireStationControllerTest {
 
 		String otherFireStationJson = objectMapper.writeValueAsString(otherF);
 		otherFireStation = objectMapper.readValue(otherFireStationJson, FireStation.class);
+
+		runtimeException = new RuntimeException("Service exception.");
+		responseStatusExceptionNotFound = new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource not found.");
 	}
 
 
@@ -79,7 +84,7 @@ public class FireStationControllerTest {
 
 	@Test
 	public void getFireStations_throwsException_test () throws Exception {
-		when(fireStationService.getFireStations()).thenThrow(new RuntimeException("Service exception"));
+		when(fireStationService.getFireStations()).thenThrow(runtimeException);
 
 		mockMvc.perform(get("/firestations"))
 				.andExpect(status().isInternalServerError());
@@ -89,8 +94,7 @@ public class FireStationControllerTest {
 
 	@Test
 	public void getFireStations_throwsResponseStatusException_test () throws Exception {
-		when(fireStationService.getFireStations())
-				.thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "No fire station found."));
+		when(fireStationService.getFireStations()).thenThrow(responseStatusExceptionNotFound);
 
 		mockMvc.perform(get("/firestations"))
 				.andExpect(status().isNotFound());
@@ -114,8 +118,7 @@ public class FireStationControllerTest {
 
 	@Test
 	public void getFireStationById_throwsException_test () throws Exception {
-		when(fireStationService.getFireStationById(fireStation.getId()))
-				.thenThrow(new RuntimeException("Service exception"));
+		when(fireStationService.getFireStationById(fireStation.getId())).thenThrow(runtimeException);
 
 		mockMvc.perform(get("/firestation?id=%d".formatted(fireStation.getId())))
 				.andExpect(status().isInternalServerError());
@@ -125,8 +128,7 @@ public class FireStationControllerTest {
 
 	@Test
 	public void getFireStationById_throwsResponseStatusException_test () throws Exception {
-		when(fireStationService.getFireStationById(fireStation.getId()))
-				.thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "No fire station found"));
+		when(fireStationService.getFireStationById(fireStation.getId())).thenThrow(responseStatusExceptionNotFound);
 
 		mockMvc.perform(get("/firestation?id=%d".formatted(fireStation.getId())))
 				.andExpect(status().isNotFound());
@@ -136,7 +138,8 @@ public class FireStationControllerTest {
 
 	@Test
 	public void getFireStationByStationNumber_success_test () throws Exception {
-		when(fireStationService.getFireStationsByStationNumber(fireStation.getStation())).thenReturn(List.of(fireStation));
+		when(fireStationService.getFireStationsByStationNumber(fireStation.getStation()))
+				.thenReturn(List.of(fireStation));
 
 		mockMvc.perform(get("/firestations_by_number?stationNumber=%d".formatted(fireStation.getStation())))
 				.andExpect(status().isOk())
@@ -145,24 +148,26 @@ public class FireStationControllerTest {
 				.andExpect(jsonPath("$[0].station").value(fireStation.getStation()))
 				.andExpect(jsonPath("$[0].address").value(fireStation.getAddress()));
 
-		verify(fireStationService, times(1)).getFireStationsByStationNumber(fireStation.getStation());
+		verify(fireStationService, times(1))
+				.getFireStationsByStationNumber(fireStation.getStation());
 	}
 
 	@Test
 	public void getFireStationByStationNumber_throwsException_test () throws Exception {
 		when(fireStationService.getFireStationsByStationNumber(fireStation.getStation()))
-				.thenThrow(new RuntimeException("Service exception"));
+				.thenThrow(runtimeException);
 
 		mockMvc.perform(get("/firestations_by_number?stationNumber=%d".formatted(fireStation.getStation())))
 				.andExpect(status().isInternalServerError());
 
-		verify(fireStationService, times(1)).getFireStationsByStationNumber(fireStation.getStation());
+		verify(fireStationService, times(1))
+				.getFireStationsByStationNumber(fireStation.getStation());
 	}
 
 	@Test
 	public void getFireStationByStationNumber_throwsResponseStatusException_test () throws Exception {
 		when(fireStationService.getFireStationsByStationNumber(fireStation.getStation()))
-				.thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "No fire station found"));
+				.thenThrow(responseStatusExceptionNotFound);
 
 		mockMvc.perform(get("/firestations_by_number?stationNumber=%d".formatted(fireStation.getStation())))
 				.andExpect(status().isNotFound());
@@ -182,8 +187,7 @@ public class FireStationControllerTest {
 
 	@Test
 	public void deleteFireStation_throwsException_test () throws Exception {
-		doThrow(new RuntimeException("Service exception"))
-				.when(fireStationService).deleteFireStation(fireStation.getId());
+		doThrow(runtimeException).when(fireStationService).deleteFireStation(fireStation.getId());
 
 		mockMvc.perform(delete("/firestation?id=%d".formatted(fireStation.getId())))
 				.andExpect(status().isInternalServerError());
@@ -193,8 +197,7 @@ public class FireStationControllerTest {
 
 	@Test
 	public void deleteFireStation_throwsResponseStatusException_test () throws Exception {
-		doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "No fire station found and can't be deleted."))
-				.when(fireStationService).deleteFireStation(fireStation.getId());
+		doThrow(responseStatusExceptionNotFound).when(fireStationService).deleteFireStation(fireStation.getId());
 
 		mockMvc.perform(delete("/firestation?id=%d".formatted(fireStation.getId())))
 				.andExpect(status().isNotFound());
@@ -222,7 +225,7 @@ public class FireStationControllerTest {
 
 	@Test
 	public void addFireStation_throwsException_test () throws Exception {
-		when(fireStationService.addFireStation(fireStation)).thenThrow(new RuntimeException("Service exception"));
+		when(fireStationService.addFireStation(fireStation)).thenThrow(runtimeException);
 
 		mockMvc.perform(
 						post("/firestation")
@@ -236,8 +239,7 @@ public class FireStationControllerTest {
 
 	@Test
 	public void addFireStation_throwsResponseStatusException_test () throws Exception {
-		when(fireStationService.addFireStation(fireStation))
-				.thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Fire station already exist."));
+		when(fireStationService.addFireStation(fireStation)).thenThrow(responseStatusExceptionNotFound);
 
 		mockMvc.perform(
 						post("/firestation")
@@ -277,8 +279,7 @@ public class FireStationControllerTest {
 		String fsUpdateJson = objectMapper.writeValueAsString(fsUpdate);
 		fsUpdate = objectMapper.readValue(fsUpdateJson, FireStationUpdate.class);
 
-		when(fireStationService.updateFireStation(fireStation.getId(), fsUpdate))
-				.thenThrow(new RuntimeException("Service exception"));
+		when(fireStationService.updateFireStation(fireStation.getId(), fsUpdate)).thenThrow(runtimeException);
 
 		mockMvc.perform(
 						patch("/firestation?id=%d".formatted(fireStation.getId()))
@@ -297,7 +298,7 @@ public class FireStationControllerTest {
 		fsUpdate = objectMapper.readValue(fsUpdateJson, FireStationUpdate.class);
 
 		when(fireStationService.updateFireStation(fireStation.getId(), fsUpdate))
-				.thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Fire station not found and can't be updated."));
+				.thenThrow(responseStatusExceptionNotFound);
 
 		mockMvc.perform(
 						patch("/firestation?id=%d".formatted(fireStation.getId()))

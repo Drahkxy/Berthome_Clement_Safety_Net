@@ -7,7 +7,7 @@ import com.openclassrooms.safety_net.model.Person;
 import com.openclassrooms.safety_net.model.primary_key.PersonId;
 import com.openclassrooms.safety_net.model.update.PersonUpdate;
 import com.openclassrooms.safety_net.service.PersonService;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -27,19 +27,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class PersonControllerTest {
 	@Autowired
 	private MockMvc mockMvc;
-	@Autowired
-	private ObjectMapper objectMapper;
 	@MockBean
 	private PersonService personService;
 
-	private String personJson;
-	private Person person;
-	private Person otherPerson;
-	private PersonId existingPersonId;
-	private PersonId nonExistentPersonId;
+	private static ObjectMapper objectMapper;
+	private static String personJson;
+	private static Person person;
+	private static Person otherPerson;
+	private static PersonId existingPersonId;
+	private static PersonId nonExistentPersonId;
+	private static RuntimeException runtimeException;
+	private static ResponseStatusException responseStatusExceptionNotFound;
 
-	@BeforeEach
-	public void setUp () throws JsonProcessingException {
+	@BeforeAll
+	public static void setUp () throws JsonProcessingException {
+		objectMapper = new ObjectMapper();
+
 		Address address = new Address("123 Main St", "12345", "Springfield");
 		address.setId(1);
 
@@ -56,6 +59,10 @@ public class PersonControllerTest {
 
 		existingPersonId = new PersonId(person.getFirstName(), person.getLastName());
 		nonExistentPersonId = new PersonId("non", "existent");
+
+		runtimeException = new RuntimeException("Service exception.");
+		responseStatusExceptionNotFound = new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource not found.");
+
 	}
 
 	@Test
@@ -87,7 +94,7 @@ public class PersonControllerTest {
 
 	@Test
 	public void getPersons_throwsException_test () throws Exception {
-		when(personService.getPersons()).thenThrow(new RuntimeException("Service exception"));
+		when(personService.getPersons()).thenThrow(runtimeException);
 
 		mockMvc.perform(get("/persons"))
 				.andExpect(status().isInternalServerError());
@@ -97,7 +104,8 @@ public class PersonControllerTest {
 
 	@Test
 	public void getPersons_throwsResponseStatusException_test () throws Exception {
-		when(personService.getPersons()).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "No person found."));
+		when(personService.getPersons())
+				.thenThrow(responseStatusExceptionNotFound);
 
 		mockMvc.perform(get("/persons"))
 				.andExpect(status().isNotFound());
@@ -109,37 +117,51 @@ public class PersonControllerTest {
 	void getPersonById_success_test () throws Exception {
 		when(personService.getPersonById(existingPersonId)).thenReturn(person);
 
-		mockMvc.perform(get("/person?firstname=%s&lastname=%s".formatted(existingPersonId.getFirstName(), existingPersonId.getLastName())))
-				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
-				.andExpect(jsonPath("firstName").value(person.getFirstName()))
-				.andExpect(jsonPath("lastName").value(person.getLastName()))
-				.andExpect(jsonPath("phone").value(person.getPhone()))
-				.andExpect(jsonPath("email").value(person.getEmail()))
-				.andExpect(jsonPath("address.label").value(person.getAddress().getLabel()))
-				.andExpect(jsonPath("address.zip").value(person.getAddress().getZip()))
-				.andExpect(jsonPath("address.city").value(person.getAddress().getCity()));
+		mockMvc.perform(
+				get("/person?firstname=%s&lastname=%s".formatted(
+						existingPersonId.getFirstName(),
+						existingPersonId.getLastName()
+				))
+		)
+		.andExpect(status().isOk())
+		.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+		.andExpect(jsonPath("firstName").value(person.getFirstName()))
+		.andExpect(jsonPath("lastName").value(person.getLastName()))
+		.andExpect(jsonPath("phone").value(person.getPhone()))
+		.andExpect(jsonPath("email").value(person.getEmail()))
+		.andExpect(jsonPath("address.label").value(person.getAddress().getLabel()))
+		.andExpect(jsonPath("address.zip").value(person.getAddress().getZip()))
+		.andExpect(jsonPath("address.city").value(person.getAddress().getCity()));
 
 		verify(personService, times(1)).getPersonById(existingPersonId);
 	}
 
 	@Test
 	void getPersonById_throwsException_test () throws Exception {
-		when(personService.getPersonById(nonExistentPersonId)).thenThrow(new RuntimeException("Service Exception"));
+		when(personService.getPersonById(nonExistentPersonId)).thenThrow(runtimeException);
 
-		mockMvc.perform(get("/person?firstname=%s&lastname=%s".formatted(nonExistentPersonId.getFirstName(), nonExistentPersonId.getLastName())))
-				.andExpect(status().isInternalServerError());
+		mockMvc.perform(
+				get("/person?firstname=%s&lastname=%s".formatted(
+						nonExistentPersonId.getFirstName(),
+						nonExistentPersonId.getLastName()
+				))
+		)
+		.andExpect(status().isInternalServerError());
 
 		verify(personService, times(1)).getPersonById(nonExistentPersonId);
 	}
 
 	@Test
 	void getPersonById_throwsResponseStatusException_test () throws Exception {
-		when(personService.getPersonById(nonExistentPersonId))
-				.thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "No person found."));
+		when(personService.getPersonById(nonExistentPersonId)).thenThrow(responseStatusExceptionNotFound);
 
-		mockMvc.perform(get("/person?firstname=%s&lastname=%s".formatted(nonExistentPersonId.getFirstName(), nonExistentPersonId.getLastName())))
-				.andExpect(status().isNotFound());
+		mockMvc.perform(
+				get("/person?firstname=%s&lastname=%s".formatted(
+						nonExistentPersonId.getFirstName(),
+						nonExistentPersonId.getLastName()
+				))
+		)
+		.andExpect(status().isNotFound());
 
 		verify(personService, times(1)).getPersonById(nonExistentPersonId);
 	}
@@ -148,29 +170,43 @@ public class PersonControllerTest {
 	public void deletePerson_success_test () throws Exception {
 		doNothing().when(personService).deletePersonById(existingPersonId);
 
-		mockMvc.perform(delete("/person?firstname=%s&lastname=%s".formatted(existingPersonId.getFirstName(), existingPersonId.getLastName())))
-				.andExpect(status().isOk());
+		mockMvc.perform(
+				delete("/person?firstname=%s&lastname=%s".formatted(
+						existingPersonId.getFirstName(),
+						existingPersonId.getLastName()
+				))
+		)
+		.andExpect(status().isOk());
 
 		verify(personService, times(1)).deletePersonById(existingPersonId);
 	}
 
 	@Test
 	public void deletePerson_throwsException_test () throws Exception {
-		doThrow(new RuntimeException("Service Exception")).when(personService).deletePersonById(nonExistentPersonId);
+		doThrow(runtimeException).when(personService).deletePersonById(nonExistentPersonId);
 
-		mockMvc.perform(delete("/person?firstname=%s&lastname=%s".formatted(nonExistentPersonId.getFirstName(), nonExistentPersonId.getLastName())))
-				.andExpect(status().isInternalServerError());
+		mockMvc.perform(
+				delete("/person?firstname=%s&lastname=%s".formatted(
+						nonExistentPersonId.getFirstName(),
+						nonExistentPersonId.getLastName()
+				))
+		)
+		.andExpect(status().isInternalServerError());
 
 		verify(personService, times(1)).deletePersonById(nonExistentPersonId);
 	}
 
 	@Test
 	public void deletePerson_throwsResponseStatusException_test () throws Exception {
-		doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Person not found and can't be deleted."))
-				.when(personService).deletePersonById(nonExistentPersonId);
+		doThrow(responseStatusExceptionNotFound).when(personService).deletePersonById(nonExistentPersonId);
 
-		mockMvc.perform(delete("/person?firstname=%s&lastname=%s".formatted(nonExistentPersonId.getFirstName(), nonExistentPersonId.getLastName())))
-				.andExpect(status().isNotFound());
+		mockMvc.perform(
+				delete("/person?firstname=%s&lastname=%s".formatted(
+						nonExistentPersonId.getFirstName(),
+						nonExistentPersonId.getLastName()
+				))
+		)
+		.andExpect(status().isNotFound());
 
 		verify(personService, times(1)).deletePersonById(nonExistentPersonId);
 	}
@@ -197,7 +233,7 @@ public class PersonControllerTest {
 
 	@Test
 	public void addPerson_throwsException_test () throws Exception {
-		when(personService.addPerson(person)).thenThrow(new RuntimeException("Service exception"));
+		when(personService.addPerson(person)).thenThrow(runtimeException);
 
 		mockMvc.perform(
 				post("/person")
@@ -211,8 +247,7 @@ public class PersonControllerTest {
 
 	@Test
 	public void addPerson_throwsResponseStatusException_test () throws Exception {
-		when(personService.addPerson(person))
-				.thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "This person already exist"));
+		when(personService.addPerson(person)).thenThrow(responseStatusExceptionNotFound);
 
 		mockMvc.perform(
 				post("/person")
@@ -233,16 +268,20 @@ public class PersonControllerTest {
 		when(personService.updatePerson(existingPersonId, personUpdate)).thenReturn(person);
 
 		mockMvc.perform(
-				patch("/person?firstname=%s&lastname=%s".formatted(existingPersonId.getFirstName(), existingPersonId.getLastName()))
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(personUpdateJson))
-				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
-				.andExpect(jsonPath("firstName").value(person.getFirstName()))
-				.andExpect(jsonPath("lastName").value(person.getLastName()))
-				.andExpect(jsonPath("phone").value(person.getPhone()))
-				.andExpect(jsonPath("email").value(person.getEmail()))
-				.andExpect(jsonPath("address").value(person.getAddress()));
+				patch("/person?firstname=%s&lastname=%s".formatted(
+						existingPersonId.getFirstName(),
+						existingPersonId.getLastName()
+				))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(personUpdateJson)
+		)
+		.andExpect(status().isOk())
+		.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+		.andExpect(jsonPath("firstName").value(person.getFirstName()))
+		.andExpect(jsonPath("lastName").value(person.getLastName()))
+		.andExpect(jsonPath("phone").value(person.getPhone()))
+		.andExpect(jsonPath("email").value(person.getEmail()))
+		.andExpect(jsonPath("address").value(person.getAddress()));
 
 		verify(personService, times(1)).updatePerson(existingPersonId, personUpdate);
 	}
@@ -251,14 +290,17 @@ public class PersonControllerTest {
 	public void updatePerson_throwsException_test () throws Exception {
 		PersonUpdate personUpdate = new PersonUpdate();
 
-		when(personService.updatePerson(nonExistentPersonId, personUpdate))
-				.thenThrow(new RuntimeException("Service exception"));
+		when(personService.updatePerson(nonExistentPersonId, personUpdate)).thenThrow(runtimeException);
 
 		mockMvc.perform(
-				patch("/person?firstname=%s&lastname=%s".formatted(nonExistentPersonId.getFirstName(), nonExistentPersonId.getLastName()))
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(personUpdate)))
-				.andExpect(status().isInternalServerError());
+				patch("/person?firstname=%s&lastname=%s".formatted(
+						nonExistentPersonId.getFirstName(),
+						nonExistentPersonId.getLastName()
+				))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(personUpdate))
+		)
+		.andExpect(status().isInternalServerError());
 
 		verify(personService, times(1)).updatePerson(nonExistentPersonId, personUpdate);
 	}
@@ -267,14 +309,17 @@ public class PersonControllerTest {
 	public void updatePerson_throwsResponseStatusException_test () throws Exception {
 		PersonUpdate personUpdate = new PersonUpdate();
 
-		when(personService.updatePerson(nonExistentPersonId, personUpdate))
-				.thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Person not found and can't be updated."));
+		when(personService.updatePerson(nonExistentPersonId, personUpdate)).thenThrow(responseStatusExceptionNotFound);
 
 		mockMvc.perform(
-						patch("/person?firstname=%s&lastname=%s".formatted(nonExistentPersonId.getFirstName(), nonExistentPersonId.getLastName()))
-								.contentType(MediaType.APPLICATION_JSON)
-								.content(objectMapper.writeValueAsString(personUpdate)))
-				.andExpect(status().isNotFound());
+						patch("/person?firstname=%s&lastname=%s".formatted(
+								nonExistentPersonId.getFirstName(),
+								nonExistentPersonId.getLastName()
+						))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(personUpdate))
+		)
+		.andExpect(status().isNotFound());
 
 		verify(personService, times(1)).updatePerson(nonExistentPersonId, personUpdate);
 	}

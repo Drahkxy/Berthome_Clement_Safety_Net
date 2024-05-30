@@ -1,6 +1,5 @@
 package com.openclassrooms.safety_net.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openclassrooms.safety_net.model.Address;
 import com.openclassrooms.safety_net.model.primary_key.PersonId;
 import com.openclassrooms.safety_net.model.response.*;
@@ -28,8 +27,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class UtilitiesControllerTest {
 	@Autowired
 	private MockMvc mockMvc;
-	@Autowired
-	private ObjectMapper objectMapper;
 	@MockBean
 	private UtilitiesService utilitiesService;
 	@MockBean
@@ -104,9 +101,11 @@ public class UtilitiesControllerTest {
 		when(utilitiesService.getPersonInfo(personId.getFirstName(), personId.getLastName()))
 				.thenReturn(personInfos);
 
-		mockMvc.perform(get("/personInfo?firstName=%s&lastName=%s".formatted(personId.getFirstName(), personId.getLastName())))
-				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON));
+		mockMvc.perform(
+				get("/personInfo?firstName=%s&lastName=%s".formatted(personId.getFirstName(), personId.getLastName()))
+		)
+		.andExpect(status().isOk())
+		.andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
 		verify(utilitiesService, times(1))
 				.getPersonInfo(personId.getFirstName(), personId.getLastName());
@@ -119,8 +118,10 @@ public class UtilitiesControllerTest {
 		when(utilitiesService.getPersonInfo(personId.getFirstName(), personId.getLastName()))
 				.thenThrow(runtimeException);
 
-		mockMvc.perform(get("/personInfo?firstName=%s&lastName=%s".formatted(personId.getFirstName(), personId.getLastName())))
-				.andExpect(status().isInternalServerError());
+		mockMvc.perform(
+				get("/personInfo?firstName=%s&lastName=%s".formatted(personId.getFirstName(), personId.getLastName()))
+		)
+		.andExpect(status().isInternalServerError());
 
 		verify(utilitiesService, times(1))
 				.getPersonInfo(personId.getFirstName(), personId.getLastName());
@@ -133,7 +134,9 @@ public class UtilitiesControllerTest {
 		when(utilitiesService.getPersonInfo(personId.getFirstName(), personId.getLastName()))
 				.thenThrow(responseStatusExceptionNotFound);
 
-		mockMvc.perform(get("/personInfo?firstName=%s&lastName=%s".formatted(personId.getFirstName(), personId.getLastName())))
+		mockMvc.perform(
+				get("/personInfo?firstName=%s&lastName=%s".formatted(personId.getFirstName(), personId.getLastName()))
+		)
 				.andExpect(status().isNotFound());
 
 		verify(utilitiesService, times(1))
@@ -183,12 +186,20 @@ public class UtilitiesControllerTest {
 	public void getFireInfos_success_test () throws Exception {
 		FireInfos fireInfos = new FireInfos();
 
-		when(utilitiesService.getFireInfos(existingAddress.getLabel(), existingAddress.getZip(), existingAddress.getCity()))
-				.thenReturn(fireInfos);
+		when(utilitiesService.getFireInfos(
+				existingAddress.getLabel(),
+				existingAddress.getZip(),
+				existingAddress.getCity()
+		))
+		.thenReturn(fireInfos);
 
-		mockMvc.perform(get("/fire?label=%s&zip=%s&city=%s".formatted(existingAddress.getLabel(), existingAddress.getZip(), existingAddress.getCity())))
-				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON));
+		mockMvc.perform(get("/fire?label=%s&zip=%s&city=%s".formatted(
+				existingAddress.getLabel(),
+				existingAddress.getZip(),
+				existingAddress.getCity()
+		)))
+		.andExpect(status().isOk())
+		.andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
 		verify(utilitiesService, times(1))
 				.getFireInfos(existingAddress.getLabel(), existingAddress.getZip(), existingAddress.getCity());
@@ -196,11 +207,21 @@ public class UtilitiesControllerTest {
 
 	@Test
 	public void getFireInfos_throwsException_test () throws Exception {
-		when(utilitiesService.getFireInfos(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity()))
-				.thenThrow(runtimeException);
+		when(utilitiesService.getFireInfos(
+				nonExistentAddress.getLabel(),
+				nonExistentAddress.getZip(),
+				nonExistentAddress.getCity()
+		))
+		.thenThrow(runtimeException);
 
-		mockMvc.perform(get("/fire?label=%s&zip=%s&city=%s".formatted(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity())))
-				.andExpect(status().isInternalServerError());
+		mockMvc.perform(
+				get("/fire?label=%s&zip=%s&city=%s".formatted(
+						nonExistentAddress.getLabel(),
+						nonExistentAddress.getZip(),
+						nonExistentAddress.getCity()
+				))
+		)
+		.andExpect(status().isInternalServerError());
 
 		verify(utilitiesService, times(1))
 				.getFireInfos(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity());
@@ -208,11 +229,21 @@ public class UtilitiesControllerTest {
 
 	@Test
 	public void getFireInfos_throwsResponseStatusException_test () throws Exception {
-		when(utilitiesService.getFireInfos(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity()))
-				.thenThrow(responseStatusExceptionNotFound);
+		when(utilitiesService.getFireInfos(
+				nonExistentAddress.getLabel(),
+				nonExistentAddress.getZip(),
+				nonExistentAddress.getCity()
+		))
+		.thenThrow(responseStatusExceptionNotFound);
 
-		mockMvc.perform(get("/fire?label=%s&zip=%s&city=%s".formatted(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity())))
-				.andExpect(status().isNotFound());
+		mockMvc.perform(
+				get("/fire?label=%s&zip=%s&city=%s".formatted(
+						nonExistentAddress.getLabel(),
+						nonExistentAddress.getZip(),
+						nonExistentAddress.getCity()
+				))
+		)
+		.andExpect(status().isNotFound());
 
 		verify(utilitiesService, times(1))
 				.getFireInfos(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity());
@@ -256,12 +287,22 @@ public class UtilitiesControllerTest {
 	public void getChildAlertInfos_success_test () throws Exception {
 		List<ChildInfos> childInfos = List.of(new ChildInfos(), new ChildInfos());
 
-		when(utilitiesService.getChildAlertInfos(existingAddress.getLabel(), existingAddress.getZip(), existingAddress.getCity()))
-				.thenReturn(childInfos);
+		when(utilitiesService.getChildAlertInfos(
+				existingAddress.getLabel(),
+				existingAddress.getZip(),
+				existingAddress.getCity()
+		))
+		.thenReturn(childInfos);
 
-		mockMvc.perform(get("/childAlert?label=%s&zip=%s&city=%s".formatted(existingAddress.getLabel(), existingAddress.getZip(), existingAddress.getCity())))
-				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON));
+		mockMvc.perform(
+				get("/childAlert?label=%s&zip=%s&city=%s".formatted(
+						existingAddress.getLabel(),
+						existingAddress.getZip(),
+						existingAddress.getCity()
+				))
+		)
+		.andExpect(status().isOk())
+		.andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
 		verify(utilitiesService, times(1))
 				.getChildAlertInfos(existingAddress.getLabel(), existingAddress.getZip(), existingAddress.getCity());
@@ -269,26 +310,53 @@ public class UtilitiesControllerTest {
 
 	@Test
 	public void getChildAlertInfos_throwsException_test () throws Exception {
-		when(utilitiesService.getChildAlertInfos(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity()))
-				.thenThrow(runtimeException);
+		when(utilitiesService.getChildAlertInfos(
+				nonExistentAddress.getLabel(),
+				nonExistentAddress.getZip(),
+				nonExistentAddress.getCity()
+		))
+		.thenThrow(runtimeException);
 
-		mockMvc.perform(get("/childAlert?label=%s&zip=%s&city=%s".formatted(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity())))
+		mockMvc.perform(
+				get("/childAlert?label=%s&zip=%s&city=%s".formatted(
+						nonExistentAddress.getLabel(),
+						nonExistentAddress.getZip(),
+						nonExistentAddress.getCity()
+				))
+		)
 				.andExpect(status().isInternalServerError());
 
 		verify(utilitiesService, times(1))
-				.getChildAlertInfos(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity());
+				.getChildAlertInfos(
+						nonExistentAddress.getLabel(),
+						nonExistentAddress.getZip(),
+						nonExistentAddress.getCity()
+				);
 	}
 
 	@Test
 	public void getChildAlertInfos_throwsResponseStatusException_test () throws Exception {
-		when(utilitiesService.getChildAlertInfos(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity()))
-				.thenThrow(responseStatusExceptionNotFound);
+		when(utilitiesService.getChildAlertInfos(
+				nonExistentAddress.getLabel(),
+				nonExistentAddress.getZip(),
+				nonExistentAddress.getCity()
+		))
+		.thenThrow(responseStatusExceptionNotFound);
 
-		mockMvc.perform(get("/childAlert?label=%s&zip=%s&city=%s".formatted(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity())))
-				.andExpect(status().isNotFound());
+		mockMvc.perform(
+				get("/childAlert?label=%s&zip=%s&city=%s".formatted(
+						nonExistentAddress.getLabel(),
+						nonExistentAddress.getZip(),
+						nonExistentAddress.getCity()))
+		)
+		.andExpect(status().isNotFound());
 
 		verify(utilitiesService, times(1))
-				.getChildAlertInfos(nonExistentAddress.getLabel(), nonExistentAddress.getZip(), nonExistentAddress.getCity());
+				.getChildAlertInfos(
+						nonExistentAddress.getLabel(),
+						nonExistentAddress.getZip(),
+						nonExistentAddress.getCity()
+				);
 	}
 
 	@Test
@@ -302,7 +370,8 @@ public class UtilitiesControllerTest {
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-		verify(utilitiesService, times(1)).getPersonsCoveredByFireStationsInfos(existingStationNumber);
+		verify(utilitiesService, times(1))
+				.getPersonsCoveredByFireStationsInfos(existingStationNumber);
 	}
 
 	@Test
@@ -313,7 +382,8 @@ public class UtilitiesControllerTest {
 		mockMvc.perform(get("/firestations_residents?stationNumber=%s".formatted(nonExistentStationNumber)))
 				.andExpect(status().isInternalServerError());
 
-		verify(utilitiesService, times(1)).getPersonsCoveredByFireStationsInfos(nonExistentStationNumber);
+		verify(utilitiesService, times(1))
+				.getPersonsCoveredByFireStationsInfos(nonExistentStationNumber);
 	}
 
 	@Test
@@ -324,7 +394,8 @@ public class UtilitiesControllerTest {
 		mockMvc.perform(get("/firestations_residents?stationNumber=%s".formatted(nonExistentStationNumber)))
 				.andExpect(status().isNotFound());
 
-		verify(utilitiesService, times(1)).getPersonsCoveredByFireStationsInfos(nonExistentStationNumber);
+		verify(utilitiesService, times(1))
+				.getPersonsCoveredByFireStationsInfos(nonExistentStationNumber);
 	}
 
 }
