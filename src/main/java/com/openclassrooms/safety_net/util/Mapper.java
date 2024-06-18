@@ -2,165 +2,193 @@ package com.openclassrooms.safety_net.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.openclassrooms.safety_net.model.*;
+import com.openclassrooms.safety_net.model.dto.FireStationDTO;
 import com.openclassrooms.safety_net.model.dto.GlobalDTO;
+import com.openclassrooms.safety_net.model.dto.MedicalRecordDTO;
+import com.openclassrooms.safety_net.model.dto.PersonDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-@Component
-public class JsonMapper {
-	@Autowired
-	private ObjectMapper objectMapper;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
+@Component
+public class Mapper {
+	@Autowired
+	private FileJsonReader jsonDataReader;
 	private String dataJson;
 
-	{
-		dataJson = JsonReader.getDataJson();
+	private GlobalDTO globalDTO;
+	private final List<Address> addresses = new ArrayList<>();
+	private final List<Person> persons = new ArrayList<>();
+	private final List<MedicalRecord> medicalRecords = new ArrayList<>();
+	private final List<FireStation> fireStations = new ArrayList<>();
+
+
+	public void startMapping (String resourcePath) {
+		jsonDataReader.setFilePath(resourcePath);
+		dataJson = jsonDataReader.getJsonData();
+		getData();
+		createAddresses();
+		mapPersonsDTOtoPersonsEntity();
+		mapFireStationsDTOtoFireStationsEntity();
+		mapMedicalRecordsDTOtoMedicalRecordsEntity();
 	}
 
-	public GlobalDTO mapDataToGlobalDTO () throws JsonProcessingException {
-		return objectMapper.readValue(dataJson, GlobalDTO.class);
-	}
-
-	/*private List<PersonDTO> mapPersonsStringToPersonJsonList (String persons) throws JsonProcessingException {
-		return objectMapper.readValue(persons, new TypeReference<List<PersonDTO>>() {});
-	}
-
-	private List<MedicalRecordDTO> mapMedicalRecordsStringToMedicalRecordJsonList (String medicalRecords) throws JsonProcessingException {
-		return objectMapper.readValue(medicalRecords, new TypeReference<List<MedicalRecordDTO>>() {});
-	}
-
-	private List<FireStationDTO> mapFireStationsStringToFireStationJsonList (String fireStations) throws JsonProcessingException {
-		return objectMapper.readValue(fireStations, new TypeReference<List<FireStationDTO>>() {});
-	}
-
-	private List<Address> mapPersonJsonListToAddressWithResidentsList (List<PersonDTO> personsJson) {
-		List<Address> addresses = new ArrayList<>();
-
-		personsJson.forEach(personDTO -> {
-			Person person = new Person(personDTO.getFirstName(), personDTO.getLastName(), personDTO.getPhone(), personDTO.getEmail());
-
-			Address address;
-
-			List<Address> filteredAddresses = addresses.stream().filter(a -> a.getLabel().equals(personDTO.getAddress()) && a.getZip().equals(personDTO.getZip()) && a.getCity().equals(personDTO.getCity()) ).toList();
-
-			if (filteredAddresses.size() > 0) {
-				address = filteredAddresses.get(0);
-			} else {
-				address = new Address(personDTO.getAddress(), personDTO.getZip(), personDTO.getCity());
-				addresses.add(address);
-			}
-
-			address.addResident(person);
-		});
-
-		return addresses;
-	}
-
-	private List<Address> mapAddressEntitiesForIncludeFireStations (List<Address> addresses, List<FireStationDTO> fireStationsJson) {
-		fireStationsJson.forEach(fireStationDTO -> {
-			String fireStationAddress = fireStationDTO.getAddress();
-
-			for (Address address : addresses) {
-				if (address.getLabel().equals(fireStationAddress)) {
-					FireStation fireStation = new FireStation(Integer.parseInt(fireStationDTO.getStation()));
-					address.addFireStation(fireStation);
-				}
-			}
-		});
-
-		return addresses;
-	}
-
-	private List<MedicalRecord> mapMedicalRecordJsonListToMedicalRecordList (List<MedicalRecordDTO> medicalRecordsJson) {
-		List<MedicalRecord> medicalRecords = new ArrayList<>();
-
-		List<Allergy> allergies = new ArrayList<>();
-		List<Medication> medications = new ArrayList<>();
-
-		medicalRecordsJson.forEach(m -> {
-			String[] birthdaySplit= m.getBirthdate().split("/");
-			String birthdayFormatted = birthdaySplit[2] + "-" + birthdaySplit[0] + "-" + birthdaySplit[1];
-			LocalDate birthday = LocalDate.parse(birthdayFormatted);
-
-			MedicalRecord medicalRecord = new MedicalRecord(m.getFirstName(), m.getLastName(), birthday);
-
-			List<Allergy> currentAllergies = new ArrayList<>();
-			for (String allergyString : m.getAllergies()) {
-				List<Allergy> filteredAllergies = allergies.stream().filter(a -> a.getName().equalsIgnoreCase(allergyString)).toList();
-
-				if (filteredAllergies.size() > 0) {
-					currentAllergies.add(filteredAllergies.get(0));
-				} else {
-					Allergy newAllergy = new Allergy(allergyString);
-					newAllergy.setId(allergies.size() + 1);
-					allergies.add(newAllergy);
-					currentAllergies.add(newAllergy);
-				}
-			}
-			medicalRecord.setAllergies(currentAllergies);
-
-			List<Medication> currentMedications = new ArrayList<>();
-			for (String medicationString : m.getMedications()) {
-				String[] medicationStringSplit = medicationString.split(":");
-				String name = medicationStringSplit[0];
-				int dosage = Integer.parseInt(medicationStringSplit[1].substring(0, (medicationStringSplit[1].length() - 2)));
-
-				List<Medication> filteredMedication = medications.stream().filter(medication -> medication.getName().equalsIgnoreCase(name) && medication.getDosage() == dosage).toList();
-
-				if (filteredMedication.size() > 0) {
-					currentMedications.add(filteredMedication.get(0));
-				} else {
-					Medication medication = new Medication(name, dosage);
-					medication.setId(medications.size() + 1);
-					currentMedications.add(medication);
-					medications.add(medication);
-				}
-			}
-			medicalRecord.setMedications(currentMedications);
-
-			medicalRecords.add(medicalRecord);
-		});
-
-		return medicalRecords;
-	}
-
-	public List<Address> getAddresses () {
-		String personsString = jsonReader.getPersonsJson();
-		String fireStationsString = jsonReader.getFirestationsData();
-
-		List<PersonDTO> personsJsonObjects;
-		List<FireStationDTO> fireStationsJsonObjects;
-
-		try {
-			personsJsonObjects = mapPersonsStringToPersonJsonList(personsString);
-			fireStationsJsonObjects = mapFireStationsStringToFireStationJsonList(fireStationsString);
-		} catch (JsonProcessingException e) {
-			System.out.println(e);
-			personsJsonObjects = new ArrayList<>();
-			fireStationsJsonObjects = new ArrayList<>();
-		}
-
-		List<Address> addressesWithResident = mapPersonJsonListToAddressWithResidentsList(personsJsonObjects);
-		List<Address> addressesWithResidentAndFireStation = mapAddressEntitiesForIncludeFireStations(addressesWithResident, fireStationsJsonObjects);
-
-		return addressesWithResidentAndFireStation;
+	public List<Person> getPersons () {
+		return persons;
 	}
 
 	public List<MedicalRecord> getMedicalRecords () {
-		String medicalRecordsString = jsonReader.getMedicalrecordsData();
+		return medicalRecords;
+	}
 
-		List<MedicalRecordDTO> medicalRecordsJsonObjects;
+	public List<FireStation> getFireStations () {
+		return fireStations;
+	}
 
+
+	public void getData () {
 		try {
-			medicalRecordsJsonObjects = mapMedicalRecordsStringToMedicalRecordJsonList(medicalRecordsString);
+			ObjectMapper objectMapper = new ObjectMapper();
+			globalDTO = objectMapper.readValue(dataJson, GlobalDTO.class);
 		} catch (JsonProcessingException e) {
-			System.out.println(e);
-			medicalRecordsJsonObjects = new ArrayList<>();
+			e.printStackTrace();
+		}
+	}
+
+	public void mapMedicalRecordsDTOtoMedicalRecordsEntity () {
+		List<MedicalRecordDTO> medicalRecordDTOList = globalDTO.getMedicalrecords();
+
+		List<Allergy> alreadyExistentAllergies = new ArrayList<>();
+		List<Medication> alreadyExistentMedications = new ArrayList<>();
+
+		medicalRecordDTOList.forEach(medicalRecordDTO -> {
+			String firstName = medicalRecordDTO.getFirstName();
+			String lastName = medicalRecordDTO.getLastName();
+			LocalDate birthday = mapStringBirthdayToLocalDateBirthday(medicalRecordDTO.getBirthdate());
+			List<Allergy> allergies = manageAllergies(alreadyExistentAllergies, medicalRecordDTO.getAllergies());
+			List<Medication> medications = manageMedications(alreadyExistentMedications, medicalRecordDTO.getMedications());
+
+			MedicalRecord medicalRecord = new MedicalRecord(firstName, lastName, birthday);
+			medicalRecord.setAllergies(allergies);
+			medicalRecord.setMedications(medications);
+
+			medicalRecords.add(medicalRecord);
+		});
+	}
+
+	public void createAddresses () {
+		List<PersonDTO> personsDTO = globalDTO.getPersons();
+
+		personsDTO.forEach(personDTO -> {
+			String label = personDTO.getAddress();
+			String zip = personDTO.getZip();
+			String city = personDTO.getCity();
+
+			List<Address> addressesFiltered = addresses.stream()
+					.filter(address -> address.getLabel().equalsIgnoreCase(label) && address.getZip().equalsIgnoreCase(zip) && address.getCity().equalsIgnoreCase(city))
+					.toList();
+
+			if (addressesFiltered.size() == 0) {
+				addresses.add(new Address(label, zip, city));
+			}
+		});
+	}
+
+	public void mapPersonsDTOtoPersonsEntity () {
+		List<PersonDTO> personsDTO = globalDTO.getPersons();
+
+		personsDTO.forEach(personDTO -> {
+			Address address = addresses.stream().filter(a -> {
+				return a.getLabel().equalsIgnoreCase(personDTO.getAddress())
+						|| a.getZip().equalsIgnoreCase(personDTO.getZip())
+						|| a.getCity().equalsIgnoreCase(personDTO.getCity());
+			}).toList().get(0);
+
+			Person person = new Person(personDTO.getFirstName(), personDTO.getLastName(), personDTO.getPhone(), personDTO.getEmail());
+			address.addResident(person);
+
+			persons.add(person);
+		});
+	}
+
+	public void mapFireStationsDTOtoFireStationsEntity () {
+		List<FireStationDTO> fireStationsDTO = globalDTO.getFirestations();
+
+		fireStationsDTO.forEach(fireStationDTO -> {
+			Address address = addresses.stream().filter(a -> a.getLabel().equalsIgnoreCase(fireStationDTO.getAddress()))
+					.toList()
+					.get(0);
+
+			FireStation fireStation = new FireStation(Integer.parseInt(fireStationDTO.getStation()));
+			address.addFireStation(fireStation);
+
+			fireStations.add(fireStation);
+		});
+	}
+
+	public LocalDate mapStringBirthdayToLocalDateBirthday (String birthday) {
+		String[] birthdaySplited = birthday.split("/");
+
+		int day = Integer.parseInt(birthdaySplited[1]);
+		int month = Integer.parseInt(birthdaySplited[0]);
+		int year = Integer.parseInt(birthdaySplited[2]);
+
+		return LocalDate.of(year, month, day);
+	}
+
+	public Medication mapStringMedicationToMedication (String stringMedication) {
+		String[] medicationSplited = stringMedication.split(":");
+
+		String name = medicationSplited[0];
+		String stringDosage = medicationSplited[1];
+		int dosage = Integer.parseInt(stringDosage.substring(0, stringDosage.length() - 2));
+
+		return new Medication(name, dosage);
+	}
+
+	public List<Allergy> manageAllergies (List<Allergy> alreadyExistentAllergies, String[] stringAllergies) {
+		List<Allergy> allergiesToReturn = new ArrayList<>();
+
+		for (String s : stringAllergies) {
+			List<Allergy> allergyFiltered = alreadyExistentAllergies.stream()
+					.filter(a -> a.getName().equalsIgnoreCase(s))
+					.toList();
+
+			if (allergyFiltered.size() == 0) {
+				Allergy a = new Allergy(s);
+				allergiesToReturn.add(a);
+				alreadyExistentAllergies.add(a);
+			} else {
+				allergiesToReturn.add(allergyFiltered.get(0));
+			}
 		}
 
-		List<MedicalRecord> medicalRecords = mapMedicalRecordJsonListToMedicalRecordList(medicalRecordsJsonObjects);
+		return allergiesToReturn;
+	}
 
-		return medicalRecords;
-	}*/
+	public List<Medication> manageMedications (List<Medication> alreadyExistentMedications, String[] stringMedications) {
+		List<Medication> medicationsToReturn = new ArrayList<>();
+
+		for (String s : stringMedications) {
+			Medication m = mapStringMedicationToMedication(s);
+
+			List<Medication> medicationsFiltered = alreadyExistentMedications.stream()
+					.filter(medication -> medication.getName().equalsIgnoreCase(m.getName()) && medication.getDosage() == m.getDosage())
+					.toList();
+
+			if (medicationsFiltered.size() == 0) {
+				medicationsToReturn.add(m);
+				alreadyExistentMedications.add(m);
+			} else {
+				medicationsToReturn.add(medicationsFiltered.get(0));
+			}
+		}
+
+		return medicationsToReturn;
+	}
 
 }

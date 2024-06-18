@@ -7,6 +7,7 @@ import com.openclassrooms.safety_net.model.Person;
 import com.openclassrooms.safety_net.model.primary_key.PersonId;
 import com.openclassrooms.safety_net.model.update.PersonUpdate;
 import com.openclassrooms.safety_net.service.PersonService;
+import com.openclassrooms.safety_net.util.DbSetup;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class PersonControllerTest {
 	@Autowired
 	private MockMvc mockMvc;
+	@MockBean
+	private DbSetup dbSetup;
 	@MockBean
 	private PersonService personService;
 

@@ -1,9 +1,9 @@
-package com.openclassrooms.safety_net.util.json.model;
+package com.openclassrooms.safety_net.model.dto;
 
 import lombok.Data;
 
 @Data
-public class PersonJson {
+public class PersonDTO {
 	private String firstName;
 	private String lastName;
 	private String phone;

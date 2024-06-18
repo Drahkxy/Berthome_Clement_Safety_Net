@@ -6,6 +6,7 @@ import com.openclassrooms.safety_net.model.Address;
 import com.openclassrooms.safety_net.model.FireStation;
 import com.openclassrooms.safety_net.model.update.FireStationUpdate;
 import com.openclassrooms.safety_net.service.FireStationService;
+import com.openclassrooms.safety_net.util.DbSetup;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,8 @@ public class FireStationControllerTest {
 	private MockMvc mockMvc;
 	@MockBean
 	private FireStationService fireStationService;
+	@MockBean
+	private DbSetup dbSetup;
 
 	private static ObjectMapper objectMapper;
 	private static String fireStationJson;

@@ -8,6 +8,7 @@ import com.openclassrooms.safety_net.model.Medication;
 import com.openclassrooms.safety_net.model.primary_key.PersonId;
 import com.openclassrooms.safety_net.model.update.MedicalRecordUpdate;
 import com.openclassrooms.safety_net.service.MedicalRecordService;
+import com.openclassrooms.safety_net.util.DbSetup;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,8 @@ public class MedicalRecordControllerTest {
 	private MockMvc mockMvc;
 	@Autowired
 	private ObjectMapper objectMapper;
+	@MockBean
+	private DbSetup dbSetup;
 	@MockBean
 	private MedicalRecordService medicalRecordService;
 

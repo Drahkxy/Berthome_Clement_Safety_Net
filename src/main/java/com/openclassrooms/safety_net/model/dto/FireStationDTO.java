@@ -1,9 +1,9 @@
-package com.openclassrooms.safety_net.util.json.model;
+package com.openclassrooms.safety_net.model.dto;
 
 import lombok.Data;
 
 @Data
-public class FireStationJson {
+public class FireStationDTO {
 	private String address;
 	private String station;
 }
