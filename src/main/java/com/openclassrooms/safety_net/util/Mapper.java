@@ -1,51 +1,52 @@
-package com.openclassrooms.safety_net.util.json;
+package com.openclassrooms.safety_net.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.openclassrooms.safety_net.model.*;
-import com.openclassrooms.safety_net.util.json.model.FireStationJson;
-import com.openclassrooms.safety_net.util.json.model.MedicalRecordJson;
-import com.openclassrooms.safety_net.util.json.model.PersonJson;
+import com.openclassrooms.safety_net.model.dto.GlobalDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 @Component
 public class JsonMapper {
 	@Autowired
-	private JsonReader jsonReader;
-	private final ObjectMapper objectMapper = new ObjectMapper();
+	private ObjectMapper objectMapper;
 
-	private List<PersonJson> mapPersonsStringToPersonJsonList (String persons) throws JsonProcessingException {
-		return objectMapper.readValue(persons, new TypeReference<List<PersonJson>>() {});
+	private String dataJson;
+
+	{
+		dataJson = JsonReader.getDataJson();
 	}
 
-	private List<MedicalRecordJson> mapMedicalRecordsStringToMedicalRecordJsonList (String medicalRecords) throws JsonProcessingException {
-		return objectMapper.readValue(medicalRecords, new TypeReference<List<MedicalRecordJson>>() {});
+	public GlobalDTO mapDataToGlobalDTO () throws JsonProcessingException {
+		return objectMapper.readValue(dataJson, GlobalDTO.class);
 	}
 
-	private List<FireStationJson> mapFireStationsStringToFireStationJsonList (String fireStations) throws JsonProcessingException {
-		return objectMapper.readValue(fireStations, new TypeReference<List<FireStationJson>>() {});
+	/*private List<PersonDTO> mapPersonsStringToPersonJsonList (String persons) throws JsonProcessingException {
+		return objectMapper.readValue(persons, new TypeReference<List<PersonDTO>>() {});
 	}
 
-	private List<Address> mapPersonJsonListToAddressWithResidentsList (List<PersonJson> personsJson) {
+	private List<MedicalRecordDTO> mapMedicalRecordsStringToMedicalRecordJsonList (String medicalRecords) throws JsonProcessingException {
+		return objectMapper.readValue(medicalRecords, new TypeReference<List<MedicalRecordDTO>>() {});
+	}
+
+	private List<FireStationDTO> mapFireStationsStringToFireStationJsonList (String fireStations) throws JsonProcessingException {
+		return objectMapper.readValue(fireStations, new TypeReference<List<FireStationDTO>>() {});
+	}
+
+	private List<Address> mapPersonJsonListToAddressWithResidentsList (List<PersonDTO> personsJson) {
 		List<Address> addresses = new ArrayList<>();
 
-		personsJson.forEach(personJson -> {
-			Person person = new Person(personJson.getFirstName(), personJson.getLastName(), personJson.getPhone(), personJson.getEmail());
+		personsJson.forEach(personDTO -> {
+			Person person = new Person(personDTO.getFirstName(), personDTO.getLastName(), personDTO.getPhone(), personDTO.getEmail());
 
 			Address address;
 
-			List<Address> filteredAddresses = addresses.stream().filter(a -> a.getLabel().equals(personJson.getAddress()) && a.getZip().equals(personJson.getZip()) && a.getCity().equals(personJson.getCity()) ).toList();
+			List<Address> filteredAddresses = addresses.stream().filter(a -> a.getLabel().equals(personDTO.getAddress()) && a.getZip().equals(personDTO.getZip()) && a.getCity().equals(personDTO.getCity()) ).toList();
 
 			if (filteredAddresses.size() > 0) {
 				address = filteredAddresses.get(0);
 			} else {
-				address = new Address(personJson.getAddress(), personJson.getZip(), personJson.getCity());
+				address = new Address(personDTO.getAddress(), personDTO.getZip(), personDTO.getCity());
 				addresses.add(address);
 			}
 
@@ -55,13 +56,13 @@ public class JsonMapper {
 		return addresses;
 	}
 
-	private List<Address> mapAddressEntitiesForIncludeFireStations (List<Address> addresses, List<FireStationJson> fireStationsJson) {
-		fireStationsJson.forEach(fireStationJson -> {
-			String fireStationAddress = fireStationJson.getAddress();
+	private List<Address> mapAddressEntitiesForIncludeFireStations (List<Address> addresses, List<FireStationDTO> fireStationsJson) {
+		fireStationsJson.forEach(fireStationDTO -> {
+			String fireStationAddress = fireStationDTO.getAddress();
 
 			for (Address address : addresses) {
 				if (address.getLabel().equals(fireStationAddress)) {
-					FireStation fireStation = new FireStation(Integer.parseInt(fireStationJson.getStation()));
+					FireStation fireStation = new FireStation(Integer.parseInt(fireStationDTO.getStation()));
 					address.addFireStation(fireStation);
 				}
 			}
@@ -70,7 +71,7 @@ public class JsonMapper {
 		return addresses;
 	}
 
-	private List<MedicalRecord> mapMedicalRecordJsonListToMedicalRecordList (List<MedicalRecordJson> medicalRecordsJson) {
+	private List<MedicalRecord> mapMedicalRecordJsonListToMedicalRecordList (List<MedicalRecordDTO> medicalRecordsJson) {
 		List<MedicalRecord> medicalRecords = new ArrayList<>();
 
 		List<Allergy> allergies = new ArrayList<>();
@@ -127,8 +128,8 @@ public class JsonMapper {
 		String personsString = jsonReader.getPersonsJson();
 		String fireStationsString = jsonReader.getFirestationsData();
 
-		List<PersonJson> personsJsonObjects;
-		List<FireStationJson> fireStationsJsonObjects;
+		List<PersonDTO> personsJsonObjects;
+		List<FireStationDTO> fireStationsJsonObjects;
 
 		try {
 			personsJsonObjects = mapPersonsStringToPersonJsonList(personsString);
@@ -148,7 +149,7 @@ public class JsonMapper {
 	public List<MedicalRecord> getMedicalRecords () {
 		String medicalRecordsString = jsonReader.getMedicalrecordsData();
 
-		List<MedicalRecordJson> medicalRecordsJsonObjects;
+		List<MedicalRecordDTO> medicalRecordsJsonObjects;
 
 		try {
 			medicalRecordsJsonObjects = mapMedicalRecordsStringToMedicalRecordJsonList(medicalRecordsString);
@@ -160,6 +161,6 @@ public class JsonMapper {
 		List<MedicalRecord> medicalRecords = mapMedicalRecordJsonListToMedicalRecordList(medicalRecordsJsonObjects);
 
 		return medicalRecords;
-	}
+	}*/
 
 }
